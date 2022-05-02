@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
+
+.gradient{
+    font-family: 'Lora';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 105px;
+    line-height: 134px;
+    background: linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header{
+    display: flex;
+    justify-content: center;
+    margin-left: 10rem;
+}
+
+.header-content{
+  
+    flex:1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+    margin-left: 5rem;
+    z-index: 1;
+}
+
+.header-content p{
+    margin-top:-10px;
+    width: 35%;
+    font-family: 'Lora';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 38px;
+    color: #000000;
+
+}
+
+.header-content button{
+    border: none;
+    width: 276px;
+    height: 72px;
+    background: linear-gradient(87.94deg, #375D6B -9.35%, #2284A8 134.28%);
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 35px;
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 48px;
+    margin-top: 20px;
+    color: #FFFFFF;
+}
+
+.header-image{
+    position: absolute;
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    z-index:0;
+    
+}
+
+.header-image img{
+    margin-top: 300px;
+    margin-left: 300px;
+
+}
