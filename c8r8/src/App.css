@@ -1,4 +1,158 @@
-.{
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
+
+
+body{
     background: linear-gradient(270.62deg, #E2E2E2 -4.08%, rgba(236, 233, 230, 0.5) 108.27%);
+}
+
+.exr h1, #calculator h1, #timeline h1, h5{
+    font-family: 'Lora';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 50px;
+    line-height: 77px;
+
+    background: linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+    margin-left: 1em;
+
+}
+
+.buy-usd{
+    background: rgba( 255, 255, 255, 0.3 );
+    box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+    backdrop-filter: blur( 9.5px );
+    -webkit-backdrop-filter: blur( 9.5px );
+    border-radius: 10px;
+    border: 1px solid rgba( 255, 255, 255, 0.18 );
+}
+
+.rates{
+    display: flex;
+    justify-content: space-around;
+}
+
+.glass-card{
+    position: relative;
+    
+    background: radial-gradient(75.96% 245.93% at 13.37% 13.67%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.06) 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-sizing: border-box;
+    backdrop-filter: blur(12px);
+    border-radius: 32px;
+    box-shadow: 20px 20px 50px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.rates .glass-card{
+    width: 477px;
+    height:200px;
+}
+.glass-card h2{
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 36px;
+    color: #3A6170;
+}
+.glass-card h3{
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 36px;
+    color: #3A6170;
+}
+
+.glass-card p{
+    font-family: 'Open Sans';
+    font-size: 30px;
+}
+.new{
+    display: flex;
+    justify-content: center;
+}
+
+.new .glass-card{
+    width: 60%;
+}
+
+#calculator .glass-card{
+    width: 60%;
+}
+
+.amount-input{
+    display: flex;
+    justify-content: space-around;
+}
+
+.input-container{
+    display: flex;
+    flex-direction: column;
+    margin:auto;
+}
+
+.input-container label{
+    font-family: 'Inter';
+    color: #3A6170;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.glass-card input{
+    border-radius: 10px;
+    background-color: transparent;
+    padding: 10px;
+    font-size: 15px;
+    text-align: center;
+    background: radial-gradient(75.96% 245.93% at 13.37% 13.67%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.06) 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    
+}
+
+#transaction-type{
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 5px;
+    margin-right: 40px;
+}
+
+#transaction-entry .container{
+    display: flex;
+    justify-content: center;
+    padding: 25px;
+}
+
+.calc-container{
+    display:flex;
+    justify-content: center;
+}
+
+.calc-container .glass-card{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 50px 10px 50px;
+}
+
+
+.equals{
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+    font-size: 1.6rem;
+    margin-right: 20px;
+    color:#102A34;
+
+}
+
+.p-calc{
+    text-align: center;
+    margin-top: -25px;
+    font-family: 'Open Sans';
 
 }

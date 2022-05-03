@@ -10,7 +10,7 @@ const Header = () => {
                 Exchange <br/>Transactions
             </h1>
             <p> Your next best transaction is a few clicks away. Get historic and live insights on the latest exchange rate details. </p>
-            <button type = "button">Get Started</button>
+            <a href="#rates"><button type = "button">Get Started</button></a>
         </div>
         <div className = "header-image">
             <img src={card} alt="card"/>
