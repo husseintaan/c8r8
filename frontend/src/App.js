@@ -17,6 +17,7 @@ const States = {
   USER_CREATION: "USER_CREATION",
   USER_LOG_IN: "USER_LOG_IN",
   USER_AUTHENTICATED: "USER_AUTHENTICATED",
+  USER_NOT_AUTHENTICATED: "USER_NOT_AUTHENTICATED"
  };
  
  var SERVER_URL = "http://127.0.0.1:5000";
@@ -40,6 +41,7 @@ function App() {
 
   let lAmount1, uAmount1;
   let lAmount2, uAmount2;
+  
   if(fromLBP){
     lAmount1 = amount;
     uAmount1 = amount/buyUsdRate;
@@ -69,6 +71,7 @@ function App() {
   function addItem() {
     if(usdInput == ""||lbpInput==""){alert('Empty field!'); return;}
     if(usdInput==0||lbpInput==0){alert('Null transaction not allowed.'); return;}
+    if(usdInput<0||lbpInput<0){alert('Negative values in transaction not allowed.'); return;}
     const auth = userToken? 'Bearer ' + userToken: '';
     fetch(`${SERVER_URL}/transaction`,{
         method: 'POST',
@@ -83,8 +86,13 @@ function App() {
         })
     })
     .then(response => response.json())
-    .then(()=>{fetchRates(); setUsdInput(""); setLbpInput(""); console.log(auth)});
-    
+    .then(()=>{fetchRates(); 
+      setUsdInput(""); 
+      setLbpInput(""); 
+      if(userToken){
+        fetchUserTransactions();
+      }
+      console.log(auth)});
   }
 
   function buyFunction(){
@@ -108,11 +116,19 @@ function App() {
         password: password,
       }),
     })
-    .then((response)=>response.json())
-    .then((body)=>{
-      setAuthState(States.USER_AUTHENTICATED);
-      setUserToken(body.token);
-    });
+    .then((response) => {
+      if(response.ok){
+        response.json()
+        .then((body)=>{
+          setAuthState(States.USER_AUTHENTICATED);
+          setUserToken(body.token);
+          saveUserToken(body.token);
+        })
+      }
+      else{
+        setAuthState(States.USER_NOT_AUTHENTICATED);
+      }
+    })
   }
   function logout() {
     setUserToken(null);
@@ -175,17 +191,26 @@ function App() {
         
       </div>
       <UserCredentialsDialog  open={(authState == States.USER_CREATION)? true:false} title ="Get Started!" submitText = "Sign Up" onClose = {()=>setAuthState(States.PENDING)} onSubmit = {(username, password)=>createUser(username, password)}/>
-      <UserCredentialsDialog  open={(authState == States.USER_LOG_IN)? true:false} title ="Welcome Back!" submitText = "Sign In" onClose = {()=>setAuthState(States.PENDING)} onSubmit = {(username, password)=>{login(username, password); saveUserToken();}}/>
+      <UserCredentialsDialog  open={(authState == States.USER_LOG_IN)? true:false} title ="Welcome Back!" submitText = "Sign In" onClose = {()=>setAuthState(States.PENDING)} onSubmit = {(username, password)=> login(username, password)}/>
       <Snackbar 
         elevation = {6} 
         variant = "filled" 
-        open = {authState == States.USER_AUTHENTICATED} 
+        open = {authState === States.USER_AUTHENTICATED} 
         autoHideDuration = {2000} 
         onClose ={()=> setAuthState(States.PENDING)}
       >
         <Alert severity = "success">Success </Alert>
       </Snackbar>
-      <Header/>
+      <Snackbar
+        elevation={6}
+        variant="filled"
+        open={authState === States.USER_NOT_AUTHENTICATED}
+        autoHideDuration={2000}
+        onClose={() => setAuthState(States.PENDING)}
+        >
+        <Alert severity="error">Failed</Alert>
+      </Snackbar>
+      {!userToken && <Header/>}
       <section id='rates'>
         <div className = "exr">
           <h1>Today's Exchange Rate</h1>
@@ -207,11 +232,11 @@ function App() {
                   <div className="amount-input">
                     <div className='input-container'>
                       <label htmlFor="lbp-amount"> LBP Amount </label>
-                      <input id="lbp-amount" type="number" value={lbpInput} onChange={e =>setLbpInput(e.target.value)}/>
+                      <input id="lbp-amount" type="number" min="0" value={lbpInput} onChange={e =>setLbpInput(e.target.value)}/>
                     </div>
                     <div className = 'input-container'>
                       <label htmlFor="usd-amount"> USD Amount </label>
-                      <input id="usd-amount" type="number" value={usdInput} onChange={f =>setUsdInput(f.target.value)}/>
+                      <input id="usd-amount" type="number" min="0" value={usdInput} onChange={f =>setUsdInput(f.target.value)}/>
                     </div>
                       
                   </div>
@@ -239,18 +264,30 @@ function App() {
           <div className = 'glass-card'>
             <div className='calc'>
               <h3> Buy USD (LBP to USD)</h3>
-              <input id ="lira"  type = "number" value = {lAmount1} onChange = {(e)=>{setAmount(e.target.value); setFromLBP(true);}}/>
+              <input id ="lira"  type="number" min="0" value = {lAmount1} onChange = {(e)=>{
+                if(e.target.value>=0) {setAmount(e.target.value); setFromLBP(true);}
+                else alert('Negative values in transaction not allowed.'); return;
+                }}/>
               &nbsp; LBP <br/>
             <span className='equals'> = </span> <br/>
-              <input id = "dollar" type = "number" value = {uAmount1} onChange = {(e)=>{setAmount(e.target.value); setFromLBP(false);}}/>
+              <input id = "dollar" type="number" min="0" value = {uAmount1} onChange = {(e)=>{
+                if(e.target.value>=0) {setAmount(e.target.value); setFromLBP(false);}
+                else alert('Negative values in transaction not allowed.'); return;
+                }}/>
               &nbsp; USD 
             </div>
             <div className='calc2'>
               <h3> Sell USD (USD to LBP)</h3>
-              <input id ="lira"  type = "number" value = {lAmount2} onChange = {(e)=>{setAmount2(e.target.value); setFromLBP2(true);}}/>
+              <input id ="lira"  type="number" min="0" value = {lAmount2} onChange = {(e)=>{
+                if(e.target.value>=0) {setAmount2(e.target.value); setFromLBP2(true);}
+                else alert('Negative values in transaction not allowed.'); return;
+                }}/>
               &nbsp; LBP <br/>
             <span className='equals'> = </span> <br/>
-              <input id = "dollar" type = "number" value = {uAmount2} onChange = {(e)=>{setAmount2(e.target.value); setFromLBP2(false);}}/>
+              <input id = "dollar" type="number" min="0" value = {uAmount2} onChange = {(e)=>{
+                if(e.target.value>=0) {setAmount2(e.target.value); setFromLBP2(false);}
+                else alert('Negative values in transaction not allowed.'); return;
+                }}/>
               &nbsp; USD 
             </div>
           </div>
@@ -264,7 +301,7 @@ function App() {
         <div className='glass-card'>
         {userToken && (
                 <div className="wrapper ">
-                  <Typography variant="h5">Your Transactions</Typography>
+                  <Typography variant="h5">Your Transactions with Tellers</Typography>
                   <DataGrid
                   columns = {[
                     {
