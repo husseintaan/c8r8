@@ -27,8 +27,4 @@ frontend/yarn-error.log*
 backend/venv/
 backend/db_config.py
 backend/__pycache__/
-backend/**/.idea/shelf/
-backend/**/.idea/tasks.xml
-backend/**/.idea/workspace.xml
-backend/**/.idea/usage.statistics.xml
 
