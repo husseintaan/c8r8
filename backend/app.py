@@ -13,19 +13,23 @@ app = Flask(__name__)
 ma = Marshmallow(app)
 bcrypt = Bcrypt(app)
 
-from .db_config import DB_CONFIG
+from db_config import DB_CONFIG
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONFIG
 CORS(app)
 db = SQLAlchemy(app)
 
-from .model.user import User, UserSchema
-from .model.transaction import Transaction, TransactionSchema
+from user import User, UserSchema
+from transaction import Transaction, TransactionSchema
+from pending import Pending, PendingSchema
 
 user_schema = UserSchema()
 
 transaction_schema = TransactionSchema()
 transactions_schema = TransactionSchema(many=True)
+
+pending_schema = PendingSchema()
+pendings_schema = PendingSchema(many=True)
 
 def create_token(user_id):
     from_zone = tz.tzutc()
@@ -48,40 +52,44 @@ def decode_token(token):
     payload = jwt.decode(token, SECRET_KEY, 'HS256')
     return payload['sub']
 
-@app.route('/transaction', methods=['POST'])
-def add_transaction():
-    usd = request.json['usd_amount']
-    lbp = request.json['lbp_amount']
-    u2l = request.json['usd_to_lbp']
+@app.route('/transaction', methods=['POST', 'GET'])
+def transaction():
     auth_token = extract_auth_token(request)
+    decoded_token = None
     if(auth_token and auth_token != "null"):
         try:
             decoded_token = decode_token(auth_token)
         except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
             return abort(403)
-        t = Transaction(usd, lbp, u2l, decoded_token)
-    else:
-        t = Transaction(usd, lbp, u2l, None)
-    if(usd == 0 and lbp == 0):
-        return jsonify(message="USD and LBP amounts cannot be 0!")
-    if (usd == 0):
-        return jsonify(message="USD amount cannot be 0!")
-    if (lbp == 0):
-        return jsonify(message="LBP amount cannot be 0!")
-    db.session.add(t)
-    db.session.commit()
-    return jsonify(transaction_schema.dump(t))
-
-@app.route('/transaction', methods=['GET'])
-def get_transaction():
-    auth_token = extract_auth_token(request)
-    if(auth_token):
-        try:
-            decoded_token = decode_token(auth_token)
-        except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
-            return abort(403)
-        user_transactions = Transaction.query.filter_by(user_id=decoded_token)
-        return jsonify(transactions_schema.dump(user_transactions))
+    if(request.method =='POST'):
+        usd = request.json['usd_amount']
+        lbp = request.json['lbp_amount']
+        u2l = request.json['usd_to_lbp']
+        t = Transaction(usd, lbp, u2l, None, decoded_token)
+        if(usd == 0 and lbp == 0):
+            return jsonify(message="USD and LBP amounts cannot be 0!")
+        if (usd == 0):
+            return jsonify(message="USD amount cannot be 0!")
+        if (lbp == 0):
+            return jsonify(message="LBP amount cannot be 0!")
+        db.session.add(t)
+        db.session.commit()
+        return jsonify(transaction_schema.dump(t))
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+    utc = datetime.datetime.utcnow()
+    utc = utc.replace(tzinfo=from_zone)
+    loc = utc.astimezone(to_zone)
+    START_DATE = loc - datetime.timedelta(days=3)
+    END_DATE = loc
+    user_teller_transactions = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.user_to_id==decoded_token, Transaction.user_from_id==None).all()
+    from_user_transactions = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.user_from_id==decoded_token).all()
+    to_user_transactions = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.user_to_id==decoded_token).all()
+    user_user_transactions = []
+    for t in to_user_transactions:
+        if(t.user_from_id is not None):
+            user_user_transactions.append(t)
+    return jsonify(transactions_schema.dump(user_teller_transactions))
 
 @app.route('/exchangeRate', methods=['GET'])
 def get_rates():
@@ -92,8 +100,8 @@ def get_rates():
     loc = utc.astimezone(to_zone)
     START_DATE = loc - datetime.timedelta(days=3)
     END_DATE = loc
-    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp == 1).all()
-    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp == 0).all()
+    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1).all()
+    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0).all()
     RATES_USD_TO_LBP = []
     RATES_LBP_TO_USD = []
     for transaction in LIST_USD_TO_LBP:
@@ -112,7 +120,7 @@ def get_rates():
 def add_user():
     uname = request.json['user_name']
     upass = request.json['password']
-    u = User(uname, upass)
+    u = User(uname, upass, 0)
     if (uname == "" and upass == ""):
         return jsonify(message="Username and Password cannot be empty!")
     if (uname == ""):
@@ -130,7 +138,7 @@ def add_user():
 def authenticate():
     uname = request.json['user_name']
     upass = request.json['password']
-    u = User(uname, upass)
+    u = User(uname, upass, 0)
     if (uname == ""):
         return abort(400)
     if (upass == ""):
@@ -142,6 +150,129 @@ def authenticate():
         return abort(403)
     tok = create_token(existing_user.id)
     return jsonify(token=tok)
+
+@app.route('/timeline', methods=['POST', 'GET'])
+def interuser():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    if(request.method == 'POST'):
+        usd = request.json['usd_amount']
+        lbp = request.json['lbp_amount']
+        u2l = request.json['usd_to_lbp']
+        p = Pending(usd, lbp, u2l, decoded_token)
+        if(usd == 0 and lbp == 0):
+            return jsonify(message="USD and LBP amounts cannot be 0!")
+        if (usd == 0):
+            return jsonify(message="USD amount cannot be 0!")
+        if (lbp == 0):
+            return jsonify(message="LBP amount cannot be 0!")
+        db.session.add(p)
+        db.session.commit()
+        return jsonify(pending_schema.dump(p))
+    user_pendings = Pending.query.all()
+    other_user_pendings = []
+    for up in user_pendings:
+        if(up.user_to_id != decoded_token):
+            other_user_pendings.append(up)
+    return jsonify(pendings_schema.dump(other_user_pendings))
+
+@app.route('/timelineconfirm', methods=['POST'])
+def confirm_interuser():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    curr_transaction_id = request.json['id']
+    p = Pending.query.filter_by(id=curr_transaction_id).first()
+    t = Transaction(p.usd_amount, p.lbp_amount, p.usd_to_lbp, decoded_token, p.user_to_id)
+    db.session.delete(p)
+    db.session.commit()
+    db.session.add(t)
+    db.session.commit()
+    return jsonify(transaction_schema.dump(t))
+
+@app.route('/mytimeline', methods=['GET'])
+def my_timeline():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    user_pendings = Pending.query.filter_by(user_to_id=decoded_token).all()
+    return jsonify(pendings_schema.dump(user_pendings))
+
+@app.route('/deleterequest', methods=['POST'])
+def delete_request():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    curr_transaction_id = request.json['id']
+    curr_pending = Pending.query.filter_by(id=curr_transaction_id).first()
+    db.session.delete(curr_pending)
+    db.session.commit()
+    return jsonify(pending_schema.dump(p))
+
+@app.route('/plotall', methods=['GET'])
+def plot_all():
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+    utc = datetime.datetime.utcnow()
+    utc = utc.replace(tzinfo=from_zone)
+    loc = utc.astimezone(to_zone)
+    START_DATE = loc - datetime.timedelta(days=3)
+    END_DATE = loc
+    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1).all()
+    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0).all()
+    RATES_USD_TO_LBP = []
+    RATES_LBP_TO_USD = []
+    for transaction in LIST_USD_TO_LBP:
+        RATES_USD_TO_LBP.append(transaction.lbp_amount/transaction.usd_amount)
+    for transaction in LIST_LBP_TO_USD:
+        RATES_LBP_TO_USD.append(transaction.lbp_amount/transaction.usd_amount)
+    return jsonify(usd_to_lbp_rates=RATES_USD_TO_LBP, lbp_to_usd_rates=RATES_LBP_TO_USD)
+
+@app.route('/plotuser', methods=['GET'])
+def plot_user():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+    utc = datetime.datetime.utcnow()
+    utc = utc.replace(tzinfo=from_zone)
+    loc = utc.astimezone(to_zone)
+    START_DATE = loc - datetime.timedelta(days=3)
+    END_DATE = loc
+    LIST_USD_TO_LBP_UTO = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1, Transaction.user_to_id==decoded_token).all()
+    LIST_LBP_TO_USD_UTO = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0, Transaction.user_to_id==decoded_token).all()
+    LIST_USD_TO_LBP_UFROM = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1, Transaction.user_from_id==decoded_token).all()
+    LIST_LBP_TO_USD_UFROM = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0, Transaction.user_from_id==decoded_token).all()
+    RATES_USD_TO_LBP_UTO = []
+    RATES_LBP_TO_USD_UTO = []
+    RATES_USD_TO_LBP_UFROM = []
+    RATES_LBP_TO_USD_UFROM = []
+    for transaction in LIST_USD_TO_LBP_UTO:
+        RATES_USD_TO_LBP_UTO.append(transaction.lbp_amount/transaction.usd_amount)
+    for transaction in LIST_LBP_TO_USD_UTO:
+        RATES_LBP_TO_USD_UTO.append(transaction.lbp_amount/transaction.usd_amount)
+    for transaction in LIST_USD_TO_LBP_UFROM:
+        RATES_USD_TO_LBP_UFROM.append(transaction.lbp_amount/transaction.usd_amount)
+    for transaction in LIST_LBP_TO_USD_UFROM:
+        RATES_LBP_TO_USD_UFROM.append(transaction.lbp_amount/transaction.usd_amount)
+    return jsonify(usd_to_lbp_rates_uto=RATES_USD_TO_LBP_UTO, lbp_to_usd_rates_uto=RATES_LBP_TO_USD_UTO,
+            usd_to_lbp_rates_ufrom=RATES_USD_TO_LBP_UFROM, lbp_to_usd_rates_ufrom=RATES_LBP_TO_USD_UFROM)
+
+
+    
+
 
 
 
