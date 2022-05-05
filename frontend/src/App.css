@@ -7,7 +7,7 @@ body{
     background: linear-gradient(270.62deg, #E2E2E2 -4.08%, rgba(236, 233, 230, 0.5) 108.27%);
 }
 
-.exr h1, #calculator h1, #timeline h1, h5{
+.exr h1, #calculator h1, #timeline h1, #table h1, h5{
     font-family: 'Lora';
     font-style: normal;
     font-weight: 700;
@@ -30,6 +30,29 @@ body{
     -webkit-backdrop-filter: blur( 9.5px );
     border-radius: 10px;
     border: 1px solid rgba( 255, 255, 255, 0.18 );
+}
+
+.navbar{
+    position: sticky;
+    top: 0px;
+    background-color:  rgba(236, 233, 230, 1);
+    border-radius: 5px;
+    z-index:2;
+}
+
+.navbar-links-container p::after, .register::after{
+    content: '';
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%);
+    display: block;
+    margin: auto;
+    transition: 0.5s;
+    border-radius: 3px;
+}
+
+.navbar-links-container p:hover::after, .register:hover::after{
+    width: 100%;
 }
 
 .rates{
@@ -155,4 +178,21 @@ body{
     margin-top: -25px;
     font-family: 'Open Sans';
 
+}
+
+.p-tl{
+    text-align: center;
+    font-family: 'Open Sans';
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.timeline-container{
+    display:flex;
+    justify-content: space-around;
+}
+#timeline .glass-card{
+    width: 80%;
+    padding-top: 40px;
+    padding-bottom: 40px;
 }

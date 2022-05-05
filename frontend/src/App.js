@@ -101,7 +101,7 @@ function App() {
   }
 
   function sellFunction(){
-    if(sellUsdRate == null||buyUsdRate===0) {return "Not available yet"}
+    if(sellUsdRate == null||sellUsdRate===0) {return "Not available yet"}
     return `1 USD at ${sellUsdRate} LBP`
   }
 
@@ -184,7 +184,7 @@ function App() {
               </div>
             ) : (
               <div className = 'navbar-sign'>
-                  <p onClick={() => setAuthState(States.USER_CREATION)}> Register</p>
+                  <p onClick={() => setAuthState(States.USER_CREATION)} className ='register'> Register</p>
                   <p onClick={() => setAuthState(States.USER_LOG_IN)}> <b> Sign in </b> </p>
               </div>
             )}
@@ -296,13 +296,22 @@ function App() {
       </section>
       <section id = 'timeline'>
         <h1>Timeline</h1>
+        <div className = 'timeline-container'>
+          <div className='glass-card'>
+            {!userToken && <span class='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>}
+            {userToken && 'Placeholder'}
+          </div>
+        </div>
+        
       </section>
       <section id = 'table'>
+        {userToken && <h1>Your Transactions</h1>}
         <div className='glass-card'>
         {userToken && (
                 <div className="wrapper ">
                   <Typography variant="h5">Your Transactions with Tellers</Typography>
                   <DataGrid
+                  HorizontalAlign = 'Center'
                   columns = {[
                     {
                       field: 'id',
