@@ -192,7 +192,63 @@ body{
     justify-content: space-around;
 }
 #timeline .glass-card{
-    width: 80%;
+    width: 60%;
+  
     padding-top: 40px;
     padding-bottom: 40px;
+}
+
+#tlgc{
+    height: 400px;
+    overflow-y: scroll;
+}
+
+.posts-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.posts-container .glass-card{
+    width: 60%;
+    text-align: left;
+    padding: 0px 30px 0px;
+    margin: 20px;
+    margin-left: 100px;
+}
+
+.posts-container .glass-card h3{
+    margin-top: -30px;
+}
+
+#postxt{
+    margin-top: -25px;
+    margin-bottom: -25px;
+
+}
+
+.gc-flex{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.gc-flex button{
+    border: none;
+    width: 138px;
+    height: 36px;
+    background: linear-gradient(87.94deg, #375D6B -9.35%, #2284A8 134.28%);
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 35px;
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 16px;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+.all-transactions{
+    display: flex;
+    justify-content: space-around;
 }

@@ -7,6 +7,8 @@ from flask_bcrypt import Bcrypt
 import jwt
 import datetime
 from dateutil import tz
+
+
 SECRET_KEY = "b'|\xe7\xbfU3`\xc4\xec\xa7\xa9zf:}\xb5\xc7\xb9\x139^3@Dv'"
 
 app = Flask(__name__)
@@ -175,7 +177,7 @@ def interuser():
     user_pendings = Pending.query.all()
     other_user_pendings = []
     for up in user_pendings:
-        if(up.user_to_id != decoded_token):
+        if up.user_to_id != decoded_token:
             other_user_pendings.append(up)
     return jsonify(pendings_schema.dump(other_user_pendings))
 
@@ -229,6 +231,7 @@ def plot_all():
     END_DATE = loc
     LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1).all()
     LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0).all()
+    print(LIST_LBP_TO_USD)
     RATES_USD_TO_LBP = []
     RATES_LBP_TO_USD = []
     for transaction in LIST_USD_TO_LBP:
