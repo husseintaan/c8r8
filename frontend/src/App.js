@@ -529,7 +529,11 @@ function App() {
                         <br/> <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`}
                         </div>
                       </div>
-                      <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
+                      <div className = "button-text">
+                        <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
+                        <div class="hide">Insufficient funds!</div>
+                      </div>
+                      
                     </div>
                   </li>
                 })}</ul>
