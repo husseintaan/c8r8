@@ -21,7 +21,7 @@ export default function FormPost({
 }) { 
     let [usdpost, setUsdpost] = useState("");
     let [lbppost, setLbppost] = useState("");
-    let [type, setType] = useState("");
+    let [type, setType] = useState(0);
     const handleChange = (e) => {
         setType(e.target.value);
       };
@@ -49,7 +49,7 @@ export default function FormPost({
                     />
                 </div>
                 <div className='form-item'>
-                    <FormControl sx ={{"width": "80px"}}>
+                    <FormControl sx ={{"width": "130px"}}>
                         <InputLabel id="demo-simple-select-label">Type</InputLabel>
                             <Select
                                 labelId="demo-simple-select-label"

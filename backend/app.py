@@ -267,7 +267,7 @@ def delete_request():
     else:
         u.lbp_balance += p.lbp_amount
         u.lbp_hold -= p.lbp_amount
-    db.session.delete(curr_pending)
+    db.session.delete(p)
     db.session.commit()
     return jsonify(pending_schema.dump(p))
 

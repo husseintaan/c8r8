@@ -2,7 +2,7 @@ import './App.css';
 import logo from './images/logo.png';
 
 import { useState, useEffect, useCallback } from "react";
-import { Alert, AppBar, Box, Button, Dialog, Snackbar, Toolbar, Typography } from '@mui/material';
+import { Alert, AppBar, Box, Button, Dialog, FormControl, FormControlLabel, RadioGroup, Snackbar, Toolbar, Typography } from '@mui/material';
 import  { getUserToken, saveUserToken, clearUserToken } from "./localStorage";
 import { DataGrid } from '@mui/x-data-grid';
 import Chart from 'react-google-charts'
@@ -66,12 +66,13 @@ function App() {
   //let [postDisabled, setPostDisabled] = useState(false);
   let [balanceOpen, setBalanceOpen] = useState(false)
   let [tlPosts, setTlPosts] = useState([]);
+  let [yourPosts, setYourPosts] = useState([]);
   let [allUsdTransactions, setAllUsdTransactions]= useState([]);
   let [allLbpTransactions, setAllLbpTransactions]= useState([]);
 
   let [usdBalance, setUsdBalance] = useState(0)
   let [lbpBalance, setLbpBalance] = useState(0)
-
+  let [who, setWho] = useState("All")
 
   let lAmount1, uAmount1;
   let lAmount2, uAmount2;
@@ -264,6 +265,7 @@ function App() {
         usd_to_lbp: u2l 
       }),
     }).then((response)=>response.json())
+    .then(loadYourTimeline())
     .then((respval) => {
       if(respval.hasOwnProperty('message')) {alert('You do not have the amount of money that you are requesting to exchange'); }
       else {setPostOpen(false)}
@@ -280,7 +282,18 @@ function App() {
     .then(response => response.json())
     .then((posts)=>{setTlPosts(posts); console.log("arrays+ ", tlPosts )});
   };
-  useEffect(loadTimeline, [userToken,]);
+  useEffect(loadTimeline, [userToken, yourPosts]);
+
+  function loadYourTimeline(){
+    fetch(`${SERVER_URL}/mytimeline`,{
+      headers: {
+        Authorization: `bearer ${userToken}`,
+      }
+    })
+    .then(response => response.json())
+    .then((posts)=>{setYourPosts(posts); });
+  };
+  useEffect(loadYourTimeline, [userToken,yourPosts]);
 
   function exchange(id){
     fetch(`${SERVER_URL}/timelineconfirm`,{
@@ -293,7 +306,21 @@ function App() {
           id: id
       })
     })
-    .then(()=>{fetchBalance(); loadTimeline();})
+    .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline()})
+  };
+
+  function deletePost(id){
+    fetch(`${SERVER_URL}/deleterequest`,{
+      method: 'POST',
+      headers: {
+          'Content-Type':'application/json',
+          'Authorization': `bearer ${userToken}`
+      },
+      body: JSON.stringify({
+          id: id
+      })
+    })
+    .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline();})
   };
 
   return (
@@ -498,45 +525,72 @@ function App() {
       <section id = 'timeline'>
         <h1>Timeline</h1>
         <FormPost open={postOpen} title ="Post Request" submitText = "Post" onClose = {()=>setPostOpen(false)} onSubmit = {(usdpost, lbppost,type)=> {postTimeline(usdpost,lbppost,type)}}/>
+        
         <div className = 'timeline-container'>
+          
           <div className='glass-card' id ="tlgc">
+            
             {!userToken && <span class='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>}
             {userToken && 
             <div className = 'posts-container'>
-              <h2> All pending transactions:</h2>               
-              <Box textAlign='center'>
-                <Button variant = "contained" onClick = {()=>{setPostOpen(true)}} size="small" style={{textAlign: "center", maxWidth: '300px', background:'linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%)'}}>+ Add Request</Button> 
-              </Box>
-
-              {/* <div className = 'glass-card'>
-                <h3>Dina Younes - Buy USD:</h3>
-                <div id = 'postxt'><b>Amount:</b> $30 
-                <br/> <b>Rate:</b> 20000 LBP
-                </div>
-              </div>
-              <div className = 'glass-card'>
-                Post
-              </div>
-              <div className = 'glass-card'>
-                Post
-              </div> */}
-              <ul>{[...Array(tlPosts.length)].map((e, i) => {
-                  return <li key={tlPosts[i]['id']}>
-                    <div className = 'gc-flex'>
-                      <div className = 'glass-card'>
-                        <h3> {tlPosts[i]['user_to']} - {(tlPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
-                        <div id = 'postxt'><b>Amount:</b> {(tlPosts[i]['usd_to_lbp'])?('$ '+tlPosts[i]['usd_amount']):(tlPosts[i]['lbp_amount']+' LBP')} 
-                        <br/> <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`}
+              <FormControl id = 'radio-control'>
+                <RadioGroup
+                  row
+                  aria-labelledby="demo-row-radio-buttons-group-label"
+                  name="row-radio-buttons-group"
+                  value = {who}
+                  onChange = {(e)=>{setWho(e.target.value)}}
+                >
+                  <FormControlLabel value ="All" control = {<Radio/>} label = "All"/>
+                  <FormControlLabel value ="User" control = {<Radio/>} label = "Yours"/>
+                </RadioGroup>
+              </FormControl>
+              {(who=="All")
+              &&<div>
+                <h2> All pending transactions:</h2>               
+                <Box textAlign='center'>
+                  <Button variant = "contained" onClick = {()=>{setPostOpen(true)}} size="small" style={{textAlign: "center", maxWidth: '300px', background:'linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%)'}}>+ Add Request</Button> 
+                </Box>
+                <ul>{[...Array(tlPosts.length)].map((e, i) => {
+                    return <li key={tlPosts[i]['id']}>
+                      <div className = 'gc-flex'>
+                        <div className = 'glass-card'>
+                          <h3> {tlPosts[i]['user_to']} - {(tlPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
+                          <div id = 'postxt'><b>Amount:</b> {(tlPosts[i]['usd_to_lbp'])?('$ '+tlPosts[i]['usd_amount']):(tlPosts[i]['lbp_amount']+' LBP')} 
+                          <br/> <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`}
+                          </div>
                         </div>
+                        <div className = "button-text">
+                          <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
+                          <div class="hide">Insufficient funds!</div>
+                        </div>
+                        
                       </div>
-                      <div className = "button-text">
-                        <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
-                        <div class="hide">Insufficient funds!</div>
-                      </div>
-                      
-                    </div>
-                  </li>
-                })}</ul>
+                    </li>
+                  })}</ul>
+                </div>}
+                {(who=="User")
+                  &&
+                  <div>
+                    <h2> Your requests:</h2>    
+                      <ul>{[...Array(yourPosts.length)].map((e, i) => {
+                      return <li key={yourPosts[i]['id']}>
+                        <div className = 'gc-flex'>
+                          <div className = 'glass-card'>
+                            <h3> You ({yourPosts[i]['user_to']}) - {(yourPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
+                            <div id = 'postxt'><b>Amount:</b> {(yourPosts[i]['usd_to_lbp'])?('$ '+yourPosts[i]['usd_amount']):(yourPosts[i]['lbp_amount']+' LBP')} 
+                            <br/> <b>Rate:</b> {`1 USD at ${(yourPosts[i]['lbp_amount']/yourPosts[i]['usd_amount']).toFixed(2)} LBP`}
+                            </div>
+                          </div>
+                          <div className = "button-text">
+                            <button type = "button" onClick = {()=>{deletePost(yourPosts[i]['id'])}} >Delete</button>
+                          </div>
+                          
+                        </div>
+                      </li>
+                    })}</ul>
+                  </div>
+                }
 
             </div>
             }

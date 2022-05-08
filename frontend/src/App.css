@@ -298,3 +298,7 @@ body{
     display: block;
     color: red;
 }
+
+#radio-control{
+    margin-left: 20px;
+}
