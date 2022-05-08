@@ -181,7 +181,19 @@ function App() {
         user_name: username,
         password: password,
       }),
-    }).then((response)=>login(username, password));
+    }).then((response)=>{
+      if(response.ok){
+        response.json()
+        .then((body)=>{
+          setAuthState(States.USER_AUTHENTICATED);
+          setUserToken(body.token);
+          saveUserToken(body.token);
+        })
+      }
+      else{
+        setAuthState(States.USER_NOT_AUTHENTICATED);
+      }
+    })
   }
 
   const fetchUserTransactions = useCallback(()=>{

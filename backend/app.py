@@ -122,7 +122,7 @@ def get_rates():
 def add_user():
     uname = request.json['user_name']
     upass = request.json['password']
-    u = User(uname, upass, 0)
+    u = User(uname, upass, 1000, 3000000)
     if (uname == "" and upass == ""):
         return jsonify(message="Username and Password cannot be empty!")
     if (uname == ""):
@@ -140,7 +140,6 @@ def add_user():
 def authenticate():
     uname = request.json['user_name']
     upass = request.json['password']
-    u = User(uname, upass, 0)
     if (uname == ""):
         return abort(400)
     if (upass == ""):
@@ -178,6 +177,7 @@ def interuser():
     other_user_pendings = []
     for up in user_pendings:
         if up.user_to_id != decoded_token:
+            up.user_to_id = User.query.filter_by(id=up.user_to_id).first().user_name
             other_user_pendings.append(up)
     return jsonify(pendings_schema.dump(other_user_pendings))
 
