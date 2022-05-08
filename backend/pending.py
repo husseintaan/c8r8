@@ -6,13 +6,14 @@ class Pending(db.Model):
     lbp_amount = db.Column(db.Float, nullable=0)
     usd_to_lbp = db.Column(db.Boolean, nullable=0)
     user_to_id = db.Column(db.Integer, nullable=0)
+    user_to = db.Column(db.String(30), nullable=0)
 
-    def __init__(self, uam, lam, utl, uti):
+    def __init__(self, uam, lam, utl, uti, ut):
         super(Pending, self).__init__(usd_amount=uam, lbp_amount=lam,
-                                          usd_to_lbp=utl, user_to_id=uti)
+                                          usd_to_lbp=utl, user_to_id=uti, user_to=ut)
 
 
 class PendingSchema(ma.Schema):
     class Meta:
-        fields = ("id", "usd_amount", "lbp_amount", "usd_to_lbp", "user_to_id")
+        fields = ("id", "usd_amount", "lbp_amount", "usd_to_lbp", "user_to_id" , "user_to")
         model = Pending

@@ -122,7 +122,7 @@ def get_rates():
 def add_user():
     uname = request.json['user_name']
     upass = request.json['password']
-    u = User(uname, upass, 1000, 3000000)
+    u = User(uname, upass, 1000, 3000000, 0, 0)
     if (uname == "" and upass == ""):
         return jsonify(message="Username and Password cannot be empty!")
     if (uname == ""):
@@ -152,6 +152,26 @@ def authenticate():
     tok = create_token(existing_user.id)
     return jsonify(token=tok)
 
+@app.route('/usdbalance', methods=['GET'])
+def get_usd_balance():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    u = User.query.filter_by(id=decoded_token).first()
+    return u.usd_balance + u.usd_hold
+
+@app.route('/lbpbalance', methods=['GET'])
+def get_lbp_balance():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    u = User.query.filter_by(id=decoded_token).first()
+    return u.lbp_balance + u.lbp_hold
+
 @app.route('/timeline', methods=['POST', 'GET'])
 def interuser():
     auth_token = extract_auth_token(request)
@@ -163,13 +183,22 @@ def interuser():
         usd = request.json['usd_amount']
         lbp = request.json['lbp_amount']
         u2l = request.json['usd_to_lbp']
-        p = Pending(usd, lbp, u2l, decoded_token)
         if(usd == 0 and lbp == 0):
             return jsonify(message="USD and LBP amounts cannot be 0!")
         if (usd == 0):
             return jsonify(message="USD amount cannot be 0!")
         if (lbp == 0):
             return jsonify(message="LBP amount cannot be 0!")
+        u = User.query.filter_by(id=decoded_token).first()
+        if(u2l==1 and u.usd_balance<usd or u2l==0 and u.lbp_balance<lbp):
+            return jsonify(message="You do not have the amount that you are requesting to exchange.")
+        if(u2l):
+            u.usd_balance -= usd
+            u.usd_hold += usd
+        else:
+            u.lbp_balance -= lbp
+            u.lbp_hold += lbp
+        p = Pending(usd, lbp, u2l, decoded_token, u.user_name)
         db.session.add(p)
         db.session.commit()
         return jsonify(pending_schema.dump(p))
@@ -177,7 +206,6 @@ def interuser():
     other_user_pendings = []
     for up in user_pendings:
         if up.user_to_id != decoded_token:
-            up.user_to_id = User.query.filter_by(id=up.user_to_id).first().user_name
             other_user_pendings.append(up)
     return jsonify(pendings_schema.dump(other_user_pendings))
 
@@ -190,9 +218,23 @@ def confirm_interuser():
         return abort(403)
     curr_transaction_id = request.json['id']
     p = Pending.query.filter_by(id=curr_transaction_id).first()
+    user_from = User.query.filter_by(id=decoded_token).first()
+    user_to = User.query.filter_by(id=p.user_to_id).first()
+    if(p.usd_to_lbp == 1 and user_from.lbp_balance < p.lbp_amount or p.usd_to_lbp == 0 and user_from.usd_balance < p.usd_amount):
+        return jsonify(message="You do not have the requested amount.")
+    if(p.usd_to_lbp == 1):
+        user_from.usd_balance += p.usd_amount
+        user_from.lbp_balance -= p.lbp_amount
+        user_to.usd_hold -= p.usd_amount
+        user_to.lbp_balance += p.lbp_amount
+    else:
+        user_from.lbp_balance += p.lbp_amount
+        user_from.usd_balance -= p.usd_amount
+        user_to.lbp_hold -= p.lbp_amount
+        user_to.usd_balance += p.usd_amount
     t = Transaction(p.usd_amount, p.lbp_amount, p.usd_to_lbp, decoded_token, p.user_to_id)
     db.session.delete(p)
-    db.session.commit()
+    #db.session.commit()
     db.session.add(t)
     db.session.commit()
     return jsonify(transaction_schema.dump(t))
@@ -215,7 +257,14 @@ def delete_request():
     except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
         return abort(403)
     curr_transaction_id = request.json['id']
-    curr_pending = Pending.query.filter_by(id=curr_transaction_id).first()
+    p = Pending.query.filter_by(id=curr_transaction_id).first()
+    u = User.query.filter_by(id=decoded_token).first()
+    if(p.usd_to_lbp):
+        u.usd_balance += p.usd_amount
+        u.usd_hold -= p.usd_amount
+    else:
+        u.lbp_balance += p.lbp_amount
+        u.lbp_hold -= p.lbp_amount
     db.session.delete(curr_pending)
     db.session.commit()
     return jsonify(pending_schema.dump(p))
@@ -231,7 +280,6 @@ def plot_all():
     END_DATE = loc
     LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1).all()
     LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0).all()
-    print(LIST_LBP_TO_USD)
     RATES_USD_TO_LBP = []
     RATES_LBP_TO_USD = []
     for transaction in LIST_USD_TO_LBP:
