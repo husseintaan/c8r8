@@ -64,16 +64,12 @@ def transaction():
         except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
             return abort(403)
     if(request.method =='POST'):
-        usd = request.json['usd_amount']
-        lbp = request.json['lbp_amount']
-        u2l = request.json['usd_to_lbp']
+        usd = float(request.json['usd_amount'])
+        lbp = float(request.json['lbp_amount'])
+        u2l = int(request.json['usd_to_lbp'])
         t = Transaction(usd, lbp, u2l, None, decoded_token)
-        if(usd == 0 and lbp == 0):
-            return jsonify(message="USD and LBP amounts cannot be 0!")
-        if (usd == 0):
-            return jsonify(message="USD amount cannot be 0!")
-        if (lbp == 0):
-            return jsonify(message="LBP amount cannot be 0!")
+        if(usd == 0 or lbp == 0):
+            return abort(403)
         db.session.add(t)
         db.session.commit()
         return jsonify(transaction_schema.dump(t))
@@ -180,18 +176,14 @@ def interuser():
     except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
         return abort(403)
     if(request.method == 'POST'):
-        usd = request.json['usd_amount']
-        lbp = request.json['lbp_amount']
-        u2l = request.json['usd_to_lbp']
-        if(usd == 0 and lbp == 0):
-            return jsonify(message="USD and LBP amounts cannot be 0!")
-        if (usd == 0):
-            return jsonify(message="USD amount cannot be 0!")
-        if (lbp == 0):
-            return jsonify(message="LBP amount cannot be 0!")
+        usd = float(request.json['usd_amount'])
+        lbp = float(request.json['lbp_amount'])
+        u2l = int(request.json['usd_to_lbp'])
+        if(usd == 0 or lbp == 0):
+            return abort(403)
         u = User.query.filter_by(id=decoded_token).first()
         if(u2l==1 and u.usd_balance<usd or u2l==0 and u.lbp_balance<lbp):
-            return jsonify(message="You do not have the amount that you are requesting to exchange.")
+            return jsonify(message="Impossible")
         if(u2l):
             u.usd_balance -= usd
             u.usd_hold += usd
@@ -221,7 +213,7 @@ def confirm_interuser():
     user_from = User.query.filter_by(id=decoded_token).first()
     user_to = User.query.filter_by(id=p.user_to_id).first()
     if(p.usd_to_lbp == 1 and user_from.lbp_balance < p.lbp_amount or p.usd_to_lbp == 0 and user_from.usd_balance < p.usd_amount):
-        return jsonify(message="You do not have the requested amount.")
+        return jsonify(message="Impossible")
     if(p.usd_to_lbp == 1):
         user_from.usd_balance += p.usd_amount
         user_from.lbp_balance -= p.lbp_amount

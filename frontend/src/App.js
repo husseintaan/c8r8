@@ -227,7 +227,11 @@ function App() {
         lbp_amount: lbp,
         usd_to_lbp: u2l 
       }),
-    }).then(()=>{setPostOpen(false)})
+    }).then((response)=>response.json())
+    .then((respval) => {
+      if(respval.hasOwnProperty('message')) {alert('You do not have the amount of money that you are requesting to exchange'); }
+      else {setPostOpen(false)}
+    })
     //.then((response)=>login(username, password)); .then make it show on the TL??????? maybe; get function till we get to that. baby steps.
   }
 
@@ -452,9 +456,9 @@ function App() {
                   return <li key={tlPosts[i]['id']}>
                     <div className = 'gc-flex'>
                       <div className = 'glass-card'>
-                        <h3> {tlPosts[i]['user_to_id']} - {(tlPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
+                        <h3> {tlPosts[i]['user_to']} - {(tlPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
                         <div id = 'postxt'><b>Amount:</b> {(tlPosts[i]['usd_to_lbp'])?('$ '+tlPosts[i]['usd_amount']):(tlPosts[i]['lbp_amount']+' LBP')} 
-                        <br/> <b>Rate:</b> {`1 USD at ${tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']} LBP`}
+                        <br/> <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`}
                         </div>
                       </div>
                       <button type = "button">Exchange</button>
