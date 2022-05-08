@@ -3,6 +3,8 @@ import Dialog from '@mui/material/Dialog';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+
 
 
 import DialogTitle from '@mui/material/DialogTitle';
@@ -47,22 +49,24 @@ export default function FormPost({
                     />
                 </div>
                 <div className='form-item'>
-                    <InputLabel id="demo-simple-select-label">Type</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={type}
-                            label="Type"
-                            onChange={handleChange}
-                        >
-                            <MenuItem value={0}>Buy USD</MenuItem>
-                            <MenuItem value={1}>Sell USD</MenuItem>
-                        </Select>
+                    <FormControl sx ={{"width": "80px"}}>
+                        <InputLabel id="demo-simple-select-label">Type</InputLabel>
+                            <Select
+                                labelId="demo-simple-select-label"
+                                id="demo-simple-select"
+                                value={type}
+                                label="Type"
+                                onChange={handleChange}
+                            >
+                                <MenuItem value={0}>Buy USD</MenuItem>
+                                <MenuItem value={1}>Sell USD</MenuItem>
+                            </Select>
+                    </FormControl>
                 </div>
                 <Button
                 color="primary"
                 variant="contained"
-                onClick={() => onSubmit(usdpost, lbppost, type)}
+                onClick={() => {onSubmit(usdpost, lbppost, type); setUsdpost(""); setLbppost("");}}
                 >
                     {submitText}
                 </Button>

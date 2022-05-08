@@ -98,8 +98,8 @@ def get_rates():
     loc = utc.astimezone(to_zone)
     START_DATE = loc - datetime.timedelta(days=3)
     END_DATE = loc
-    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1).all()
-    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0).all()
+    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1, Transaction.user_from_id == None).all()
+    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0, Transaction.user_from_id == None).all()
     RATES_USD_TO_LBP = []
     RATES_LBP_TO_USD = []
     for transaction in LIST_USD_TO_LBP:
@@ -167,6 +167,16 @@ def get_lbp_balance():
         return abort(403)
     u = User.query.filter_by(id=decoded_token).first()
     return u.lbp_balance + u.lbp_hold
+
+@app.route('/balance', methods = ['GET'])
+def get_balance():
+    auth_token = extract_auth_token(request)
+    try:
+        decoded_token = decode_token(auth_token)
+    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
+        return abort(403)
+    u = User.query.filter_by(id=decoded_token).first()
+    return jsonify(usd_balance=u.usd_balance + u.usd_hold, lbp_balance=u.lbp_balance + u.lbp_hold)
 
 @app.route('/timeline', methods=['POST', 'GET'])
 def interuser():
@@ -270,8 +280,8 @@ def plot_all():
     loc = utc.astimezone(to_zone)
     START_DATE = loc - datetime.timedelta(days=3)
     END_DATE = loc
-    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1).all()
-    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0).all()
+    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1, Transaction.user_from_id == None).all()
+    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0, Transaction.user_from_id == None).all()
     RATES_USD_TO_LBP = []
     RATES_LBP_TO_USD = []
     for transaction in LIST_USD_TO_LBP:

@@ -2,7 +2,7 @@ import './App.css';
 import logo from './images/logo.png';
 
 import { useState, useEffect, useCallback } from "react";
-import { Alert, AppBar, Box, Button, Snackbar, Toolbar, Typography } from '@mui/material';
+import { Alert, AppBar, Box, Button, Dialog, Snackbar, Toolbar, Typography } from '@mui/material';
 import  { getUserToken, saveUserToken, clearUserToken } from "./localStorage";
 import { DataGrid } from '@mui/x-data-grid';
 import Chart from 'react-google-charts'
@@ -13,6 +13,7 @@ import Navbar from './components/Navbar/Navbar';
 import Header from './components/Header/Header'
 import FormPost from './components/FormPost/FormPost';
 import UserCredentialsDialog from './components/UserCredentialsDialog/UserCredentialsDialog';
+import Radio from '@mui/material/Radio';
 
 
 const States = {
@@ -25,6 +26,10 @@ const States = {
 
  
  var SERVER_URL = "http://127.0.0.1:5000";
+
+ function postDisabled(usd_to_lbp, usd_amount, usd_balance, lbp_amount, lbp_balance){
+   return (usd_to_lbp==1)?(lbp_amount>lbp_balance):(usd_amount>usd_balance);
+ }
 
  function movingAverage(array){
     if(array.length==1){
@@ -58,9 +63,16 @@ function App() {
   let [userTransactions, setUserTransactions] = useState([]);
 
   let [postOpen, setPostOpen]= useState(false);
+  //let [postDisabled, setPostDisabled] = useState(false);
+  let [balanceOpen, setBalanceOpen] = useState(false)
   let [tlPosts, setTlPosts] = useState([]);
   let [allUsdTransactions, setAllUsdTransactions]= useState([]);
   let [allLbpTransactions, setAllLbpTransactions]= useState([]);
+
+  let [usdBalance, setUsdBalance] = useState(0)
+  let [lbpBalance, setLbpBalance] = useState(0)
+
+
   let lAmount1, uAmount1;
   let lAmount2, uAmount2;
   
@@ -90,7 +102,30 @@ function App() {
   }
   useEffect(fetchRates, []);
 
-  
+  function fetchBalance(){
+    fetch(`${SERVER_URL}/balance`, {
+      headers:{
+      Authorization: `bearer ${userToken}`,
+    }})
+    .then(response=>response.json())
+    .then(data =>{
+      setUsdBalance(data['usd_balance']);
+      setLbpBalance(data['lbp_balance']);
+    })
+  }
+  useEffect(fetchBalance,[userToken, lbpBalance, usdBalance]);
+  // const fetchBalance = useCallback(()=>{ 
+  //   fetch(`${SERVER_URL}/balance`, {
+  //     headers:{
+  //     Authorization: `bearer ${userToken}`,
+  //   }})
+  //   .then(response=>response.json())
+  //   .then(data =>{
+  //     setUsdBalance(data['usd_balance']);
+  //     setLbpBalance(data['lbp_balance']);
+  //   })
+  // },[userToken, lbpBalance, usdBalance]);
+
   function plotAll(){
     fetch(`${SERVER_URL}/plotall`)
     .then(response=>response.json())
@@ -128,8 +163,9 @@ function App() {
       if(userToken){
         fetchUserTransactions();
       }
-      console.log(auth)});
+      });
   }
+
 
   function buyFunction(){
     if(buyUsdRate == null||buyUsdRate===0) {return "Not available yet"}
@@ -214,8 +250,8 @@ function App() {
 
   function postTimeline(usd,lbp, u2l){
     if(usd == ""||lbp==""){alert('Empty field!'); return;}
-    if(usd==0||lbp==0){alert('Null transaction not allowed.'); return;}
-    if(usd<0||lbp<0){alert('Negative values in transaction not allowed.'); return;}
+    if(usd==0||lbp==0){alert('Null transactions are not allowed.'); return;}
+    if(usd<0||lbp<0){alert('Negative values in transactions are not allowed.'); return;}
     return fetch(`${SERVER_URL}/timeline`,{
       method: "POST",
       headers: {
@@ -244,8 +280,21 @@ function App() {
     .then(response => response.json())
     .then((posts)=>{setTlPosts(posts); console.log("arrays+ ", tlPosts )});
   };
-  useEffect(loadTimeline, [userToken]);
+  useEffect(loadTimeline, [userToken,]);
 
+  function exchange(id){
+    fetch(`${SERVER_URL}/timelineconfirm`,{
+      method: 'POST',
+      headers: {
+          'Content-Type':'application/json',
+          'Authorization': `bearer ${userToken}`
+      },
+      body: JSON.stringify({
+          id: id
+      })
+    })
+    .then(()=>{fetchBalance(); loadTimeline();})
+  };
 
   return (
     <div className="App">
@@ -263,6 +312,7 @@ function App() {
         </div>
         {userToken !== null ? (
               <div className = 'navbar-sign'>
+                <p onClick = {()=>setBalanceOpen(true)}>Balance </p>
                 <p onClick={logout}>Logout</p>
               </div>
             ) : (
@@ -275,6 +325,21 @@ function App() {
       </div>
       <UserCredentialsDialog  open={(authState == States.USER_CREATION)? true:false} title ="Get Started!" submitText = "Sign Up" onClose = {()=>setAuthState(States.PENDING)} onSubmit = {(username, password)=>createUser(username, password)}/>
       <UserCredentialsDialog  open={(authState == States.USER_LOG_IN)? true:false} title ="Welcome Back!" submitText = "Sign In" onClose = {()=>setAuthState(States.PENDING)} onSubmit = {(username, password)=> login(username, password)}/>
+      <Dialog open = {balanceOpen} onClose = {()=>setBalanceOpen(false)} id = "balance-dialog" style={{'min-width':'1000px'}}>
+        <div className ='balance'>
+          <h1> Your Balance: </h1>
+          <div class ="balances">
+            <div class = "glass-card">
+              <h2>USD Balance:</h2>
+              <p>${usdBalance}</p>
+            </div>
+            <div  class= "glass-card">
+              <h2>LBP Balance</h2>
+              <p> {lbpBalance} LBP</p>
+            </div>
+          </div>
+        </div>
+      </Dialog>
       <Snackbar 
         elevation = {6} 
         variant = "filled" 
@@ -357,6 +422,7 @@ function App() {
                     },
                     vAxis: {
                       title: 'Exchange Rate',
+                      minValue: 0
                     },
                     series: {
                       1: { curveType: 'function' },
@@ -379,6 +445,7 @@ function App() {
                     },
                     vAxis: {
                       title: 'Exchange Rate',
+                      minValue: 0
                     },
                     series: {
                       1: { curveType: 'function' },
@@ -440,6 +507,7 @@ function App() {
               <Box textAlign='center'>
                 <Button variant = "contained" onClick = {()=>{setPostOpen(true)}} size="small" style={{textAlign: "center", maxWidth: '300px', background:'linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%)'}}>+ Add Request</Button> 
               </Box>
+
               {/* <div className = 'glass-card'>
                 <h3>Dina Younes - Buy USD:</h3>
                 <div id = 'postxt'><b>Amount:</b> $30 
@@ -461,7 +529,7 @@ function App() {
                         <br/> <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`}
                         </div>
                       </div>
-                      <button type = "button">Exchange</button>
+                      <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
                     </div>
                   </li>
                 })}</ul>

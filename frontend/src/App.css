@@ -252,3 +252,43 @@ body{
     display: flex;
     justify-content: space-around;
 }
+
+#balance-dialog{
+    border-radius: 10px;
+
+}
+
+.balance{
+    background: linear-gradient(270.62deg, #E2E2E2 -4.08%, rgba(236, 233, 230, 0.5) 108.27%); 
+}
+
+.balance h1{
+    font-family: 'Lora';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 77px;
+    text-align: center;
+    background: linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+}
+
+.balances{
+    display: flex;
+    gap: 15%;
+    justify-content: space-around;
+    margin: 60px;
+}
+
+.balances .glass-card{
+    padding: 20px;
+
+}
+
+.posts-container button:disabled{
+    opacity: 40%;
+    cursor:not-allowed;
+}
