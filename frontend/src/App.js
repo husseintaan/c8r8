@@ -249,6 +249,28 @@ function App() {
     }
   }, [fetchUserTransactions, userToken]);
 
+  function loadTimeline(){
+    fetch(`${SERVER_URL}/timeline`,{
+      headers: {
+        Authorization: `bearer ${userToken}`,
+      }
+    })
+    .then(response => response.json())
+    .then((posts)=>{setTlPosts(posts); console.log("arrays+ ", tlPosts )});
+  };
+  useEffect(loadTimeline, [userToken]);
+
+  function loadYourTimeline(){
+    fetch(`${SERVER_URL}/mytimeline`,{
+      headers: {
+        Authorization: `bearer ${userToken}`,
+      }
+    })
+    .then(response => response.json())
+    .then((posts)=>{setYourPosts(posts); });
+  };
+  useEffect(loadYourTimeline, [userToken, postOpen]);
+
   function postTimeline(usd,lbp, u2l){
     if(usd == ""||lbp==""){alert('Empty field!'); return;}
     if(usd==0||lbp==0){alert('Null transactions are not allowed.'); return;}
@@ -272,28 +294,6 @@ function App() {
     })
     //.then((response)=>login(username, password)); .then make it show on the TL??????? maybe; get function till we get to that. baby steps.
   }
-
-  function loadTimeline(){
-    fetch(`${SERVER_URL}/timeline`,{
-      headers: {
-        Authorization: `bearer ${userToken}`,
-      }
-    })
-    .then(response => response.json())
-    .then((posts)=>{setTlPosts(posts); console.log("arrays+ ", tlPosts )});
-  };
-  useEffect(loadTimeline, [userToken, yourPosts]);
-
-  function loadYourTimeline(){
-    fetch(`${SERVER_URL}/mytimeline`,{
-      headers: {
-        Authorization: `bearer ${userToken}`,
-      }
-    })
-    .then(response => response.json())
-    .then((posts)=>{setYourPosts(posts); });
-  };
-  useEffect(loadYourTimeline, [userToken,yourPosts]);
 
   function exchange(id){
     fetch(`${SERVER_URL}/timelineconfirm`,{
@@ -524,7 +524,7 @@ function App() {
       </section>
       <section id = 'timeline'>
         <h1>Timeline</h1>
-        <FormPost open={postOpen} title ="Post Request" submitText = "Post" onClose = {()=>setPostOpen(false)} onSubmit = {(usdpost, lbppost,type)=> {postTimeline(usdpost,lbppost,type)}}/>
+        <FormPost open={postOpen} title ="Post Request" submitText = "Post" onClose = {()=>setPostOpen(false)} average = "5" onSubmit = {(usdpost, lbppost,type)=> {postTimeline(usdpost,lbppost,type)}}/>
         
         <div className = 'timeline-container'>
           

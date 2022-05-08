@@ -302,3 +302,7 @@ body{
 #radio-control{
     margin-left: 20px;
 }
+
+#table p{
+    font-size: 20px;
+}
