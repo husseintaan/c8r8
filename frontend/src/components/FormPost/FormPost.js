@@ -59,7 +59,7 @@ export default function FormPost({
                                 onChange={handleChange}
                             >
                                 <MenuItem value={0}>Buy USD</MenuItem>
-                                <MenuItem value={1}>Sell USD</MenuItem>
+                                <MenuItem value={1}>Buy LBP</MenuItem>
                             </Select>
                     </FormControl>
                 </div>

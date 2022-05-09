@@ -210,6 +210,22 @@ function App() {
   }
   
   function createUser(username, password){
+    if(username=="") {alert("Username is empty!"); return;}
+    if(password.length < 8) {alert("Password length is below requirement (8 characters)!"); return;}
+    for(let i=0; i<username.length; i++){
+      if(!(username.charAt(i)>='0' && username.charAt(i)<='9') && !(username.charAt(i)>='a' && username.charAt(i)<='z') && !(username.charAt(i)>='A' && username.charAt(i)<='Z')){
+        alert("Username can only contain digits and English letters. Please remove any special characters.");
+        return;
+      }
+    }
+    if(username.charAt(0)>='0' && username.charAt(0)<='9'){alert("Username cannot start with a diigit."); return;}
+    var found=0;
+    for(let i=0; i<password.length; i++){
+      if(!(password.charAt(i)>='0' && password.charAt(i)<='9') && !(password.charAt(i)>='a' && password.charAt(i)<='z') && !(password.charAt(i)>='A' && password.charAt(i)<='Z')){
+        found=1; break;
+      }
+    }
+    if(found==0){alert("Please include a special character for a stronger password. (Any character that is not a digit or English letter is considered a special character.)"); return;}
     return fetch(`${SERVER_URL}/user`,{
       method: "POST",
       headers: {
@@ -242,12 +258,14 @@ function App() {
     }) 
       .then((response)=> response.json())
       .then((transactions)=>{
+        for(let i=0; i<transactions['teller'].length; i++){
+          transactions['teller'][i]['usd_to_lbp'] = transactions['teller'][i]['usd_to_lbp'] ? 'LBP' : 'USD'
+        }
         setTellerTransactions(transactions['teller']);
-        let modified_trans_user = transactions['user']
-        for(let i=0; i<modified_trans_user.length; i++){
-          modified_trans_user[i]['user_from_id'] = transactions['mapping'][modified_trans_user[i]['user_from_id']]
-          modified_trans_user[i]['user_to_id'] = transactions['mapping'][modified_trans_user[i]['user_to_id']]
-          modified_trans_user[i]['usd_to_lbp'] = modified_trans_user[i]['usd_to_lbp'] ? 'LBP' : 'USD'
+        for(let i=0; i<transactions['user'].length; i++){
+          transactions['user'][i]['user_from_id'] = transactions['mapping'][transactions['user'][i]['user_from_id']]
+          transactions['user'][i]['user_to_id'] = transactions['mapping'][transactions['user'][i]['user_to_id']]
+          transactions['user'][i]['usd_to_lbp'] = transactions['user'][i]['usd_to_lbp'] ? 'LBP' : 'USD'
         }
         setUserTransactions(transactions['user']);
         console.log(transactions);});
@@ -537,11 +555,14 @@ function App() {
         <FormPost open={postOpen} title ="Post Request" submitText = "Post" onClose = {()=>setPostOpen(false)} average = "5" onSubmit = {(usdpost, lbppost,type)=> {postTimeline(usdpost,lbppost,type)}}/>
         
         <div className = 'timeline-container'>
-          
-          <div className='glass-card' id ="tlgc">
-            
-            {!userToken && <span class='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>}
+        
+            {!userToken &&
+            <div style={{height:120}} className='glass-card'>
+            <span class='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>
+            </div>}
+
             {userToken && 
+            <div className='glass-card' id ="tlgc">
             <div className = 'posts-container'>
               <FormControl id = 'radio-control'>
                 <RadioGroup
@@ -562,9 +583,11 @@ function App() {
                     return <li key={tlPosts[i]['id']}>
                       <div className = 'gc-flex'>
                         <div className = 'glass-card'>
-                          <h3> {tlPosts[i]['user_to']} - {(tlPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
-                          <div id = 'postxt'><b>Amount:</b> {(tlPosts[i]['usd_to_lbp'])?('$ '+tlPosts[i]['usd_amount']):(tlPosts[i]['lbp_amount']+' LBP')} 
-                          <br/> <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`}
+                          <h3> {tlPosts[i]['user_to']} - {(tlPosts[i]['usd_to_lbp'])?'Buy LBP':'Buy USD'}:</h3>
+                          <div id = 'postxt'>
+                            <b>Amount:</b> {(tlPosts[i]['usd_to_lbp'])?(tlPosts[i]['lbp_amount'] + ' LBP'):('$ '+ tlPosts[i]['usd_amount'])} <br/> 
+                            <b>For:</b> {(tlPosts[i]['usd_to_lbp'])?('$ '+ tlPosts[i]['usd_amount']):(tlPosts[i]['lbp_amount'] +' LBP')} <br/> 
+                            <b>Rate:</b> {`1 USD at ${(tlPosts[i]['lbp_amount']/tlPosts[i]['usd_amount']).toFixed(2)} LBP`} <br/>      
                           </div>
                         </div>
                         <div className = "button-text">
@@ -587,9 +610,11 @@ function App() {
                       return <li key={yourPosts[i]['id']}>
                         <div className = 'gc-flex'>
                           <div className = 'glass-card'>
-                            <h3> You ({yourPosts[i]['user_to']}) - {(yourPosts[i]['usd_to_lbp'])?'Sell USD':'Buy USD'}:</h3>
-                            <div id = 'postxt'><b>Amount:</b> {(yourPosts[i]['usd_to_lbp'])?('$ '+yourPosts[i]['usd_amount']):(yourPosts[i]['lbp_amount']+' LBP')} 
-                            <br/> <b>Rate:</b> {`1 USD at ${(yourPosts[i]['lbp_amount']/yourPosts[i]['usd_amount']).toFixed(2)} LBP`}
+                            <h3> You ({yourPosts[i]['user_to']}) - {(yourPosts[i]['usd_to_lbp'])?'Buy LBP':'Buy USD'}:</h3>
+                            <div id = 'postxt'>
+                            <b>Amount:</b> {(yourPosts[i]['usd_to_lbp'])?(yourPosts[i]['lbp_amount'] + ' LBP'):('$ '+ yourPosts[i]['usd_amount'])} <br/> 
+                            <b>For:</b> {(yourPosts[i]['usd_to_lbp'])?('$ '+ yourPosts[i]['usd_amount']):(yourPosts[i]['lbp_amount'] +' LBP')} <br/> 
+                            <b>Rate:</b> {`1 USD at ${(yourPosts[i]['lbp_amount']/yourPosts[i]['usd_amount']).toFixed(2)} LBP`} <br/>  
                             </div>
                           </div>
                           <div className = "button-text">
@@ -601,12 +626,10 @@ function App() {
                     })}</ul>
                   </div>
                 }
-
+              </div>
             </div>
             }
-          </div>
-        </div>
-        
+          </div>        
       </section>
       <section id = 'table'>
           {userToken && <h1>Your Transactions</h1>}
@@ -620,19 +643,16 @@ function App() {
                       {
                         field: 'lbp_amount',
                         headerName: 'LBP Amount',
-                        width: 150, 
                         flex: 1
                       },
                       {
                         field: 'usd_amount',
                         headerName: 'USD Amount',
-                        width: 150, 
                         flex: 1
                       },
                       {
                         field: 'usd_to_lbp',
-                        headerName: 'USD to LBP',
-                        width: 90, 
+                        headerName: 'Currency Bought',
                         flex: 1
                       }
                     ]}
@@ -650,33 +670,28 @@ function App() {
                     HorizontalAlign = 'Center'
                     columns = {[
                       {
-                        field: 'user_from_id',
-                        headerName: 'From',
-                        width: 90, 
+                        field: 'user_to_id',
+                        headerName: 'To',
                         flex: 1
                       },
                       {
-                        field: 'user_to_id',
-                        headerName: 'To',
-                        width: 90, 
+                        field: 'user_from_id',
+                        headerName: 'From',
                         flex: 1
                       },
                       {
                         field: 'lbp_amount',
                         headerName: 'LBP Amount',
-                        width: 150, 
                         flex: 1
                       },
                       {
                         field: 'usd_amount',
                         headerName: 'USD Amount',
-                        width: 150, 
                         flex: 1
                       },
                       {
                         field: 'usd_to_lbp',
-                        headerName: 'Type Bought',
-                        width: 90, 
+                        headerName: 'Currency Bought',
                         flex: 1
                       }
                     ]}
