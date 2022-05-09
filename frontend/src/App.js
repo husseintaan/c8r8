@@ -159,13 +159,17 @@ function App() {
         })
     })
     .then(response => response.json())
-    .then(()=>{fetchRates(); plotAll();
-      setUsdInput(""); 
-      setLbpInput(""); 
-      if(userToken){
-        fetchUserTransactions();
+    .then((respval) => {
+      if(respval.hasOwnProperty('message')) {alert('You do not have the amount of money needed for this exchange.'); }
+      else{
+        fetchRates(); plotAll();
+        setUsdInput(""); 
+        setLbpInput(""); 
+        if(userToken){
+          fetchUserTransactions();
+        }
       }
-      });
+    })
   }
 
 
@@ -463,8 +467,8 @@ function App() {
 
             <div className="all-transactions">
                 <Chart
-                  width={'700px'}
-                  height={'410px'}
+                  width={'625px'}
+                  height={'360px'}
                   chartType="LineChart"
                   loader={<div>Loading Chart</div>}
                   color= "transparent"
@@ -486,8 +490,8 @@ function App() {
                   rootProps={{ 'data-testid': '2' }}
                 />
                 <Chart
-                  width={'700px'}
-                  height={'410px'}
+                  width={'625px'}
+                  height={'360px'}
                   chartType="LineChart"
                   loader={<div>Loading Chart</div>}
                   color= "transparent"
