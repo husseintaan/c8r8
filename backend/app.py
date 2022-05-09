@@ -87,7 +87,15 @@ def transaction():
     for t in to_user_transactions:
         if(t.user_from_id is not None):
             user_user_transactions.append(t)
-    return jsonify(transactions_schema.dump(user_teller_transactions))
+    for t in from_user_transactions:
+        user_user_transactions.append(t)
+    allu = User.query.all()
+    mapping={}
+    for u in allu:
+        mapping[u.id] = u.user_name
+    return jsonify(teller=transactions_schema.dump(user_teller_transactions), 
+                   user=transactions_schema.dump(user_user_transactions),
+                   mapping=mapping)
 
 @app.route('/exchangeRate', methods=['GET'])
 def get_rates():

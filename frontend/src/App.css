@@ -97,6 +97,7 @@ body{
     font-family: 'Open Sans';
     font-size: 30px;
 }
+
 .new{
     display: flex;
     justify-content: center;
@@ -304,5 +305,5 @@ body{
 }
 
 #table p{
-    font-size: 20px;
+    font-size: 15px;
 }

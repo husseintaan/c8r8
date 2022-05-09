@@ -61,6 +61,7 @@ function App() {
   let [fromLBP, setFromLBP] = useState(true);
   let [fromLBP2, setFromLBP2] =useState(false);
   let [userTransactions, setUserTransactions] = useState([]);
+  let [tellerTransactions, setTellerTransactions] = useState([]);
 
   let [postOpen, setPostOpen]= useState(false);
   //let [postDisabled, setPostDisabled] = useState(false);
@@ -240,7 +241,16 @@ function App() {
       },
     }) 
       .then((response)=> response.json())
-      .then((transactions)=>{setUserTransactions(transactions);console.log(transactions);});
+      .then((transactions)=>{
+        setTellerTransactions(transactions['teller']);
+        let modified_trans_user = transactions['user']
+        for(let i=0; i<modified_trans_user.length; i++){
+          modified_trans_user[i]['user_from_id'] = transactions['mapping'][modified_trans_user[i]['user_from_id']]
+          modified_trans_user[i]['user_to_id'] = transactions['mapping'][modified_trans_user[i]['user_to_id']]
+          modified_trans_user[i]['usd_to_lbp'] = modified_trans_user[i]['usd_to_lbp'] ? 'LBP' : 'USD'
+        }
+        setUserTransactions(transactions['user']);
+        console.log(transactions);});
   },[userToken]);
 
   useEffect(()=>{
@@ -306,7 +316,7 @@ function App() {
           id: id
       })
     })
-    .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline()})
+    .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline(); fetchUserTransactions();})
   };
 
   function deletePost(id){
@@ -548,9 +558,6 @@ function App() {
               {(who=="All")
               &&<div>
                 <h2> All pending transactions:</h2>               
-                <Box textAlign='center'>
-                  <Button variant = "contained" onClick = {()=>{setPostOpen(true)}} size="small" style={{textAlign: "center", maxWidth: '300px', background:'linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%)'}}>+ Add Request</Button> 
-                </Box>
                 <ul>{[...Array(tlPosts.length)].map((e, i) => {
                     return <li key={tlPosts[i]['id']}>
                       <div className = 'gc-flex'>
@@ -573,6 +580,9 @@ function App() {
                   &&
                   <div>
                     <h2> Your requests:</h2>    
+                    <Box textAlign='center'>
+                    <Button variant = "contained" onClick = {()=>{setPostOpen(true)}} size="small" style={{textAlign: "center", maxWidth: '300px', background:'linear-gradient(92.09deg, #102A34 -19.26%, #6EA4B9 162.27%)'}}>+ Add Request</Button> 
+                    </Box>
                       <ul>{[...Array(yourPosts.length)].map((e, i) => {
                       return <li key={yourPosts[i]['id']}>
                         <div className = 'gc-flex'>
@@ -599,47 +609,83 @@ function App() {
         
       </section>
       <section id = 'table'>
-        {userToken && <h1>Your Transactions</h1>}
-        <div className='glass-card'>
-        {userToken && (
-                <div className="wrapper ">
-                  <Typography variant="h5">Your Transactions with Tellers</Typography>
-                  <DataGrid
-                  HorizontalAlign = 'Center'
-                  columns = {[
-                    {
-                      field: 'id',
-                      headerName: 'ID',
-                      width: 90
-                    },
-                    {
-                      field: 'lbp_amount',
-                      headerName: 'LBP Amount',
-                      width: 150
-                    },
-                    {
-                      field: 'usd_amount',
-                      headerName: 'USD Amount',
-                      width: 150
-                    },
-                    {
-                      field: 'usd_to_lbp',
-                      headerName: 'USD to LBP',
-                      width: 90
-                    },
-                    {
-                      field: 'user_id',
-                      headerName: 'User ID',
-                      width: 90
-                    }
-                  ]}
-                  rows={userTransactions}
-                  autoHeight
-                  />
-                </div>
-        )} 
-        </div>
-
+          {userToken && <h1>Your Transactions</h1>}
+          <div className='glass-card' style={{marginLeft:15, width: 525, float: 'left',  backgroundColor: "#3A6170"}} >
+          {userToken && (
+                  <div className="wrapper ">
+                    <Typography style={{marginTop:4, marginBottom:4}} variant="h5">Your Transactions with Tellers</Typography>
+                    <DataGrid style={{color: "cornsilk"}}
+                    HorizontalAlign = 'Center'
+                    columns = {[
+                      {
+                        field: 'lbp_amount',
+                        headerName: 'LBP Amount',
+                        width: 150, 
+                        flex: 1
+                      },
+                      {
+                        field: 'usd_amount',
+                        headerName: 'USD Amount',
+                        width: 150, 
+                        flex: 1
+                      },
+                      {
+                        field: 'usd_to_lbp',
+                        headerName: 'USD to LBP',
+                        width: 90, 
+                        flex: 1
+                      }
+                    ]}
+                    rows={tellerTransactions}
+                    autoHeight
+                    />
+                  </div>
+          )} 
+          </div>
+          <div className='glass-card' style={{marginRight:15, width: 675, float:'right', backgroundColor: "#3A6170"}}>
+          {userToken && (
+                  <div width="450px" className="wrapper ">
+                    <Typography style={{marginTop:4, marginBottom:4}} variant="h5">Your Transactions with Users</Typography>
+                    <DataGrid style={{color: "cornsilk"}}
+                    HorizontalAlign = 'Center'
+                    columns = {[
+                      {
+                        field: 'user_from_id',
+                        headerName: 'From',
+                        width: 90, 
+                        flex: 1
+                      },
+                      {
+                        field: 'user_to_id',
+                        headerName: 'To',
+                        width: 90, 
+                        flex: 1
+                      },
+                      {
+                        field: 'lbp_amount',
+                        headerName: 'LBP Amount',
+                        width: 150, 
+                        flex: 1
+                      },
+                      {
+                        field: 'usd_amount',
+                        headerName: 'USD Amount',
+                        width: 150, 
+                        flex: 1
+                      },
+                      {
+                        field: 'usd_to_lbp',
+                        headerName: 'Type Bought',
+                        width: 90, 
+                        flex: 1
+                      }
+                    ]}
+                    rows={userTransactions}
+                    autoHeight
+                    />
+                  </div>
+          )} 
+          </div>
       </section>
     </div>
   );
