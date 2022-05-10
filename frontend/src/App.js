@@ -27,12 +27,15 @@ const States = {
  
  var SERVER_URL = "http://127.0.0.1:5000";
 
+ /* Helper functions */
+
  function postDisabled(usd_to_lbp, usd_amount, usd_balance, lbp_amount, lbp_balance){
    return (usd_to_lbp==1)?(lbp_amount>lbp_balance):(usd_amount>usd_balance);
  }
 
+ // moving average for plot / fluctuation of rates in a format that a graph will accept
  function movingAverage(array){
-    if(array ==undefined){return [[0,0]]}
+    if(array ==undefined){return [[0,0]]} // edge case
     if(array.length==1){
       return [[0].concat(array)];
     }
@@ -43,9 +46,10 @@ const States = {
       }
       return temp;
     }
-    else{return [[0,0]]}
+    else{return [[0,0]]} // edge case (no transaction)
  }
 
+ // good formating to calculate insights 
  function concat2(arr1, arr2){
    for(var i =1; i<arr1.length; i++){
      arr1[i].push(arr2[i][1]-arr2[i-1][1]);
@@ -74,6 +78,8 @@ function App() {
   let [amount2, setAmount2] = useState(1);
   let [fromLBP, setFromLBP] = useState(true);
   let [fromLBP2, setFromLBP2] =useState(false);
+
+  // states for the table displaying all transactions
   let [userTransactions, setUserTransactions] = useState([]);
   let [tellerTransactions, setTellerTransactions] = useState([]);
 
@@ -131,7 +137,8 @@ function App() {
   }
 
   /* All Routes */
-
+  
+  // Route to display rates
   function fetchRates() { // retrieve exchange rates and update the UI
     fetch(`${SERVER_URL}/exchangeRate`)
     .then(response => response.json())
@@ -142,6 +149,7 @@ function App() {
   }
   useEffect(fetchRates, []);
 
+  // Route to fetch the user's balance and update the state
   function fetchBalance(){
     fetch(`${SERVER_URL}/balance`, {
       headers:{
@@ -166,6 +174,7 @@ function App() {
   //   })
   // },[userToken, lbpBalance, usdBalance]);
 
+  // Route to plot all transactions buy retrieving the arrays
   function plotAll(){
     fetch(`${SERVER_URL}/plotall`)
     .then(response=>response.json())
@@ -178,6 +187,7 @@ function App() {
   }
   useEffect(plotAll, []);
 
+  // Route to plot all user effect on exchange rate
   function plotUser(){
     fetch(`${SERVER_URL}/plotuser`,{
       headers: {
@@ -192,6 +202,7 @@ function App() {
   }
   useEffect(plotUser, [userToken]);
 
+  // route to fetch user all transactions with the corresponding exchange rate caused
   function insights(){
     fetch(`${SERVER_URL}/fetcheverything`)
     .then(response=>response.json())
@@ -209,6 +220,7 @@ function App() {
   }
   useEffect(insights, [allUsdTransactions]);
 
+  // route to add a transaction
   function addItem() {
     if(usdInput == ""||lbpInput==""){alert('Empty field!'); return;}
     if(usdInput==0||lbpInput==0){alert('Null transaction not allowed.'); return;}
@@ -349,6 +361,7 @@ function App() {
     }
   }, [fetchUserTransactions, userToken]);
 
+  // route to fetch all the posts on the timeline (inter-user transactions)
   function loadTimeline(){
     fetch(`${SERVER_URL}/timeline`,{
       headers: {
@@ -360,6 +373,7 @@ function App() {
   };
   useEffect(loadTimeline, [userToken]);
 
+  // route to retrieve the timeline consisting of your own posts
   function loadYourTimeline(){
     fetch(`${SERVER_URL}/mytimeline`,{
       headers: {
@@ -371,6 +385,7 @@ function App() {
   };
   useEffect(loadYourTimeline, [userToken, postOpen]);
 
+  // route to post a request on the timeline
   function postTimeline(usd,lbp, u2l){
     if(usd == ""||lbp==""){alert('Empty field!'); return;}
     if(usd==0||lbp==0){alert('Null transactions are not allowed.'); return;}
@@ -395,6 +410,7 @@ function App() {
     //.then((response)=>login(username, password)); .then make it show on the TL??????? maybe; get function till we get to that. baby steps.
   }
 
+  // route to perform a transaction with another user
   function exchange(id){
     fetch(`${SERVER_URL}/timelineconfirm`,{
       method: 'POST',
@@ -408,6 +424,8 @@ function App() {
     })
     .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline(); fetchUserTransactions();})
   };
+  
+  // route to delete a posted transaction
 
   function deletePost(id){
     fetch(`${SERVER_URL}/deleterequest`,{
