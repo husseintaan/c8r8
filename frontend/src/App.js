@@ -32,6 +32,7 @@ const States = {
  }
 
  function movingAverage(array){
+    if(array ==undefined){return [[0,0]]}
     if(array.length==1){
       return [[0].concat(array)];
     }
@@ -42,9 +43,9 @@ const States = {
       }
       return temp;
     }
-    else{return [[]]}
+    else{return [[0,0]]}
  }
- console.log("fix", movingAverage([1,2,3]))
+ //console.log("fix", movingAverage([1,2,3]))
 
 function App() {
   let [buyUsdRate, setBuyUsdRate] = useState(null);
@@ -70,6 +71,9 @@ function App() {
   let [yourPosts, setYourPosts] = useState([]);
   let [allUsdTransactions, setAllUsdTransactions]= useState([]);
   let [allLbpTransactions, setAllLbpTransactions]= useState([]);
+
+  let [allYourUsdTransactions, setAllYourUsdTransactions]= useState([]);
+  let [allYourLbpTransactions, setAllYourLbpTransactions]= useState([]);
 
   let [usdBalance, setUsdBalance] = useState(0)
   let [lbpBalance, setLbpBalance] = useState(0)
@@ -140,6 +144,20 @@ function App() {
   }
   useEffect(plotAll, []);
 
+  function plotUser(){
+    fetch(`${SERVER_URL}/plotuser`,{
+      headers: {
+        'Authorization': `bearer ${userToken}`
+      }
+    })
+    .then(response=>response.json())
+    .then(transactions=>{
+      setAllYourUsdTransactions(movingAverage(transactions['usd_to_lbp_rates_uto'])); 
+      setAllYourLbpTransactions(movingAverage(transactions['lbp_to_usd_rates_uto'])); 
+  })
+  }
+  useEffect(plotUser, [userToken]);
+
 
   function addItem() {
     if(usdInput == ""||lbpInput==""){alert('Empty field!'); return;}
@@ -162,7 +180,7 @@ function App() {
     .then((respval) => {
       if(respval.hasOwnProperty('message')) {alert('You do not have the amount of money needed for this exchange.'); }
       else{
-        fetchRates(); plotAll();
+        fetchRates(); plotAll(); plotUser();
         setUsdInput(""); 
         setLbpInput(""); 
         if(userToken){
@@ -387,12 +405,12 @@ function App() {
       <Dialog open = {balanceOpen} onClose = {()=>setBalanceOpen(false)} id = "balance-dialog" style={{'min-width':'1000px'}}>
         <div className ='balance'>
           <h1> Your Balance: </h1>
-          <div class ="balances">
-            <div class = "glass-card">
+          <div className="balances">
+            <div className= "glass-card">
               <h2>USD Balance:</h2>
               <p>${usdBalance}</p>
             </div>
-            <div  class= "glass-card">
+            <div  className= "glass-card">
               <h2>LBP Balance</h2>
               <p> {lbpBalance} LBP</p>
             </div>
@@ -463,57 +481,111 @@ function App() {
           <h1>Graph</h1>
           <div className='graph'>
             <div className = 'glass-card'>
-            <h2>All Transactions</h2>
+              <h2>All Transactions</h2>
 
-            <div className="all-transactions">
-                <Chart
-                  width={'625px'}
-                  height={'360px'}
-                  chartType="LineChart"
-                  loader={<div>Loading Chart</div>}
-                  color= "transparent"
-                  data={[
-                    ['x', 'USD to LBP']
-                  ].concat(allUsdTransactions)}
-                  options={ {
-                    hAxis: {
-                      title: 'Time',
-                    },
-                    vAxis: {
-                      title: 'Exchange Rate',
-                      minValue: 0
-                    },
-                    series: {
-                      1: { curveType: 'function' },
-                    },
-                  }}
-                  rootProps={{ 'data-testid': '2' }}
-                />
-                <Chart
-                  width={'625px'}
-                  height={'360px'}
-                  chartType="LineChart"
-                  loader={<div>Loading Chart</div>}
-                  color= "transparent"
-                  data={[
-                    ['x', 'LBP to USD']
-                  ].concat(allLbpTransactions)}
-                  options={ {
-                    hAxis: {
-                      title: 'Time',
-                    },
-                    vAxis: {
-                      title: 'Exchange Rate',
-                      minValue: 0
-                    },
-                    series: {
-                      1: { curveType: 'function' },
-                    },
-                  }}
-                  rootProps={{ 'data-testid': '2' }}
-                />
-              </div>
-            </div>
+              <div className="all-transactions">
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'USD to LBP']
+                    ].concat(allUsdTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'LBP to USD']
+                    ].concat(allLbpTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                </div>
+
+
+              {userToken && 
+              <>
+              <h2>User Transactions</h2>
+              <p>See how your transactions affected the exchange rate. </p>
+              <div className="user-transactions">
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'USD to LBP']
+                    ].concat(allYourUsdTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'LBP to USD']
+                    ].concat(allYourLbpTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                </div> </>}
+            </div> 
           </div>
         </div>
       </section>
@@ -562,7 +634,7 @@ function App() {
         
             {!userToken &&
             <div style={{height:120}} className='glass-card'>
-            <span class='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>
+            <span className='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>
             </div>}
 
             {userToken && 
@@ -596,7 +668,7 @@ function App() {
                         </div>
                         <div className = "button-text">
                           <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
-                          <div class="hide">Insufficient funds!</div>
+                          <div className="hide">Insufficient funds!</div>
                         </div>
                         
                       </div>
@@ -669,7 +741,7 @@ function App() {
           <div className='glass-card' style={{marginRight:15, width: 675, float:'right', backgroundColor: "#3A6170"}}>
           {userToken && (
                   <div width="450px" className="wrapper ">
-                    <Typography style={{marginTop:4, marginBottom:4}} variant="h5">Your Transactions with Users</Typography>
+                    <Typography style={{marginTop:4, marginBottom:4}} variant="h5" >Your Transactions with Users</Typography>
                     <DataGrid style={{color: "cornsilk"}}
                     HorizontalAlign = 'Center'
                     columns = {[

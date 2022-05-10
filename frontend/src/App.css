@@ -7,7 +7,7 @@ body{
     background: linear-gradient(270.62deg, #E2E2E2 -4.08%, rgba(236, 233, 230, 0.5) 108.27%);
 }
 
-.exr h1, #calculator h1, #timeline h1, #table h1, h5{
+.exr h1, #calculator h1, #timeline h1, #table h1 {
     font-family: 'Lora';
     font-style: normal;
     font-weight: 700;
@@ -249,7 +249,7 @@ body{
     cursor: pointer;
 }
 
-.all-transactions{
+.all-transactions, .user-transactions{
     display: flex;
     justify-content: space-around;
 }
@@ -306,4 +306,9 @@ body{
 
 #table p{
     font-size: 15px;
+}
+
+h5{
+    color: wheat;
+    
 }
