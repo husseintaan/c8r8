@@ -45,8 +45,21 @@ const States = {
     }
     else{return [[0,0]]}
  }
- //console.log("fix", movingAverage([1,2,3]))
 
+ function concat2(arr1, arr2){
+   for(var i =1; i<arr1.length; i++){
+     arr1[i].push(arr2[i][1]-arr2[i-1][1]);
+   }
+   arr1[0].push(arr2[0][1]);
+   return arr1;
+ }
+
+ 
+
+ function insightFormat(array){
+   if(array.length == 0){return array;}
+ }
+ 
 function App() {
   let [buyUsdRate, setBuyUsdRate] = useState(null);
   let [sellUsdRate, setSellUsdRate] = useState(null);
@@ -64,21 +77,40 @@ function App() {
   let [userTransactions, setUserTransactions] = useState([]);
   let [tellerTransactions, setTellerTransactions] = useState([]);
 
+  // state of pop up dialog
   let [postOpen, setPostOpen]= useState(false);
-  //let [postDisabled, setPostDisabled] = useState(false);
+
+  // state of balance dialog
   let [balanceOpen, setBalanceOpen] = useState(false)
+
+  // list of all posts on the timeline
   let [tlPosts, setTlPosts] = useState([]);
+  
+  // list of all your timeline contributions
   let [yourPosts, setYourPosts] = useState([]);
+
+  // helpful for charting; basically a moving average of the transactions
   let [allUsdTransactions, setAllUsdTransactions]= useState([]);
   let [allLbpTransactions, setAllLbpTransactions]= useState([]);
 
+  // same thing but with your transactions
   let [allYourUsdTransactions, setAllYourUsdTransactions]= useState([]);
   let [allYourLbpTransactions, setAllYourLbpTransactions]= useState([]);
 
+  // your USD and LBP balances. They change as you engage in transactions with other users.
   let [usdBalance, setUsdBalance] = useState(0)
   let [lbpBalance, setLbpBalance] = useState(0)
+
+  // sets the timeline you're trying to see
   let [who, setWho] = useState("All")
 
+  let [insightUSD, setInsightUSD] = useState([])
+  let [insightLBP, setInsightLBP] = useState([])
+  // better format
+  let [fInsightUSD, setfInsightUSD] = useState([])
+  let [fInsightLBP, setfInsightLBP] = useState([])
+
+  // this block of code is for the calculator section (dynamic response of field change)
   let lAmount1, uAmount1;
   let lAmount2, uAmount2;
   
@@ -97,6 +129,8 @@ function App() {
     uAmount2 = amount2;
     lAmount2 = amount2*sellUsdRate;
   }
+
+  /* All Routes */
 
   function fetchRates() { // retrieve exchange rates and update the UI
     fetch(`${SERVER_URL}/exchangeRate`)
@@ -158,6 +192,22 @@ function App() {
   }
   useEffect(plotUser, [userToken]);
 
+  function insights(){
+    fetch(`${SERVER_URL}/fetcheverything`)
+    .then(response=>response.json())
+    .then(transactions=>{
+      setInsightUSD(transactions['usd_to_lbp']);
+      setInsightLBP(transactions['lbp_to_usd']);
+      console.log(insightUSD, "insights");
+    })
+    .then(
+      ()=>{
+        setfInsightUSD(concat2(insightUSD, allUsdTransactions)); console.log(fInsightUSD, allUsdTransactions);
+        setfInsightLBP(concat2(insightLBP, allLbpTransactions)); console.log(fInsightLBP, allLbpTransactions);
+      }
+    )
+  }
+  useEffect(insights, [allUsdTransactions]);
 
   function addItem() {
     if(usdInput == ""||lbpInput==""){alert('Empty field!'); return;}
@@ -180,7 +230,7 @@ function App() {
     .then((respval) => {
       if(respval.hasOwnProperty('message')) {alert('You do not have the amount of money needed for this exchange.'); }
       else{
-        fetchRates(); plotAll(); plotUser();
+        fetchRates(); plotAll(); plotUser(); insights();
         setUsdInput(""); 
         setLbpInput(""); 
         if(userToken){
@@ -477,7 +527,45 @@ function App() {
             </div>
           </div>
           <h1>Insights</h1>
-          <div className ='insights'></div>
+          <p className = 'p-calc'> Effect of every transaction on the rate:</p>
+          <div className ='insights'>
+            <div glass-card id = 'ingc'>
+              <div className = 'usd-in'>
+                <ul>{[...Array(fInsightUSD.length)].map((e, i) => {
+                        return <li key={i}>
+                          <div className = 'gc-flex'>
+                            <div className = 'glass-card'>
+                              <h3> {fInsightUSD[i][0]} USD - {(fInsightUSD[i][1])} LBP:</h3>
+                              <p> Buy USD </p>
+                              <div id = 'button-text'>
+                                <b>Effect on Buy USD Rate: </b> <br/>{(fInsightUSD[i][2]>0)&&'+'}{fInsightUSD[i][2]} <br/> 
+                              
+                              </div>
+                            </div>
+                            
+                          </div>
+                        </li>
+                      })}</ul>
+                </div>
+                <div className = 'lbp-in'>
+                <ul>{[...Array(fInsightLBP.length)].map((e, i) => {
+                        return <li key={i}>
+                          <div className = 'gc-flex'>
+                            <div className = 'glass-card'>
+                              <h3> {fInsightLBP[i][0]} USD - {(fInsightLBP[i][1])} LBP:</h3>
+                              <p> Sell USD  </p>
+                              <div id = 'button-text'>
+                                <b>Effect on Sell USD Rate: </b>  <br/>{(fInsightLBP[i][2]>0)&&'+'}{fInsightLBP[i][2]} <br/> 
+                              
+                              </div>
+                            </div>
+                            
+                          </div>
+                        </li>
+                      })}</ul>
+                  </div>
+            </div>
+          </div>
           <h1>Graph</h1>
           <div className='graph'>
             <div className = 'glass-card'>
