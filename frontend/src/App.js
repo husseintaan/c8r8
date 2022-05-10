@@ -503,7 +503,7 @@ function App() {
         >
         <Alert severity="error">Failed</Alert>
       </Snackbar>
-      {!userToken && <Header/>}
+      {!userToken && <Header/> }
       <section id='rates'>
         <div className = "exr">
           <h1>Today's Exchange Rate</h1>
@@ -566,7 +566,8 @@ function App() {
                       })}</ul>
                 </div>
                 <div className = 'lbp-in'>
-                <ul>{[...Array(fInsightLBP.length)].map((e, i) => {
+                <ul>{ // instead of extending to a map as done below and several times, one could use jinja2. we are essentially using a for loop to iterate over posts.
+                [...Array(fInsightLBP.length)].map((e, i) => {
                         return <li key={i}>
                           <div className = 'gc-flex'>
                             <div className = 'glass-card'>
