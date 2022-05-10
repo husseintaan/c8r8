@@ -7,8 +7,8 @@ class Transaction(db.Model):
     lbp_amount = db.Column(db.Float, nullable=0)
     usd_to_lbp = db.Column(db.Boolean, nullable=0)
     added_date = db.Column(db.DateTime)
-    user_from_id = db.Column(db.Integer, nullable=1)
-    user_to_id = db.Column(db.Integer)
+    user_from_id = db.Column(db.Integer, nullable=True)
+    user_to_id = db.Column(db.Integer, nullable=True)
     #user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     def __init__(self, uam, lam, utl, ufi, uti):

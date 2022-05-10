@@ -7,7 +7,8 @@ from flask_bcrypt import Bcrypt
 import jwt
 import datetime
 from dateutil import tz 
-
+import statistics 
+from datetime import date
 
 SECRET_KEY = "b'|\xe7\xbfU3`\xc4\xec\xa7\xa9zf:}\xb5\xc7\xb9\x139^3@Dv'"
 
@@ -33,7 +34,7 @@ transactions_schema = TransactionSchema(many=True)
 
 pending_schema = PendingSchema()
 pendings_schema = PendingSchema(many=True)
-
+contact_schema=ContactSchema(many=True)
 def create_token(user_id):
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
@@ -323,18 +324,6 @@ def get_daily_rate():
 
     return jsonify({'sell': usd_to_lbp_dict, 'buy': lbp_to_usd_dict}) 
 
-'''@app.route('/transaction', methods=['GET'])
-def transactionGet():
-    tken = extract_auth_token(request)
-    if tken is None:
-        abort(403)
-    else:
-        try:
-            userId = decode_token(tken)
-            transactionsOfUser = Transaction.query.filter_by(user_id = userId).all()
-        except:
-            abort(403)
-    return jsonify(transactions_schema.dump(transactionsOfUser))'''
 
 @app.route('/plotuser', methods=['GET'])
 def plot_user():
@@ -410,7 +399,39 @@ def add_listing():
     
     return jsonify(listing_schema.dump(listing))
 
+@app.route('/statistics', methods = ['GET'])
+def statistic():
+    d = date.today()
+    year = d.year
+    print(year)
+    END_DATE = datetime.datetime.now()
+    START_DATE = datetime.datetime(2022, 3, 3)
+    usd_to_lbp_transactions = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE),Transaction.usd_to_lbp == True).all()
+    lbp_to_usd_transactions = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE),Transaction.usd_to_lbp == False).all()
+    usd_to_lbp_transactions = transactions_schema.dump(usd_to_lbp_transactions)
+    lbp_to_usd_transactions = transactions_schema.dump(lbp_to_usd_transactions)
 
+    dollars = []
+    liras = []
+    for transaction in usd_to_lbp_transactions:
+        dollars.append(transaction["lbp_amount"]/transaction["usd_amount"])
+
+    for transaction in lbp_to_usd_transactions:
+        liras.append(transaction["lbp_amount"]/transaction["usd_amount"])
+
+    return jsonify({
+        "year": year,
+        "usd_to_lbp_StdDev": statistics.stdev(dollars),
+        "lbp_to_usd_StdDev": statistics.stdev(liras),
+        "usd_to_lbp_Average": statistics.mean(dollars),
+        "lbp_to_usd_Average": statistics.mean(liras),
+        "lbp_to_usd_Median": statistics.median(liras),
+        "usd_to_lbp_Median": statistics.median(dollars),
+        "usd_to_lbp_Max": max(dollars),
+        "usd_to_lbp_Min": min(dollars),
+        "lbp_to_usd_Max": max(liras),
+        "lbp_to_usd_Min": min(liras)
+    })
 @app.route('/listings', methods=['GET'])
 def get_listings():
     
@@ -419,7 +440,7 @@ def get_listings():
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         abort(403)
 
-    return jsonify(listing_schema.dump(listings, many=True))
+    return jsonify(contact_schema.dump(listings, many=True))
     
 def get_usd_to_lbp_rate(date, transactions):
 
@@ -430,6 +451,8 @@ def get_usd_to_lbp_rate(date, transactions):
     if len(daily_rate) == 0:
         return 0
     return sum(daily_rate) / len(daily_rate)
+
+
 def get_lbp_to_usd_rate(date, transactions):
     daily_rate = []
     for i in transactions:
@@ -437,5 +460,5 @@ def get_lbp_to_usd_rate(date, transactions):
             daily_rate.append(i.lbp_amount / i.usd_amount)
     if len(daily_rate) == 0:
         return 0
-    return sum(daily_rate) / len(daily_rate)
+    return sum(daily_rate) / len(daily_rate) 
 
