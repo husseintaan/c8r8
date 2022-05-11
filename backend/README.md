@@ -14,11 +14,14 @@ Follow these steps to properly operate the C8R8 backend:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use the following command: venv\Scripts\Activate\
 7- A "requirements.txt" file has all the dependencies needed. Install all these requirements.\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use the following command: pip install -r requirements.txt\
-8- Run python.\
+8- Execute the following commands.\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set FLASK_APP=app.py \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set FLASK_ENVIRONMENT=development \
+9- Run python.\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use the following command: python\
-9- You will be directed to a python script. Execute the following lines to create the tables in the database.\
+10- You will be directed to a python script. Execute the following commands to create the tables in the database.\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;>>> from app import db\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;>>> db.create_all()\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;>>> exit()\
-10- You should now be able to run the application.\
+11- You should now be able to run the application.\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use the command: flask run
