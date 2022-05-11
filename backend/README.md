@@ -20,5 +20,5 @@ Follow these steps to properly operate the C8R8 backend:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;>>> from app import db\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;>>> db.create_all()\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;>>> exit()\
-9- You should now be able to run the application.\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use the command: flask run\
+10- You should now be able to run the application.\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use the command: flask run
