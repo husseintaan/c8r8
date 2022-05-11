@@ -3,9 +3,9 @@
 Follow these steps to properly operate the C8R8 backend (on Windows):
 
 1- Clone our github repo from this link: https://github.com/husseintaan/c8r8 \
-2- Create a SQL database with a specific name, say: exchange, admin: root, password: pass\
+2- Create a SQL database with a specific name, say: exchange, admin: root, password: pass.\
 3- Create a db_config.py file to link the code to you database.\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Enter only the following line: `DB_CONFIG = 'mysql+pymysql://root:pass@localhost:3306/exchange'`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Enter only the following line: `DB_CONFIG = 'mysql+pymysql://root:pass@localhost:3306/exchange'` \
 4- Make sure to install python on your device before proceeding.\
 5- From CMD, open backend folder of the repo and create a virtual environment.
 ##### &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `py -3 -m venv venv`
