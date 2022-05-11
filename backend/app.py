@@ -67,9 +67,19 @@ def transaction():
         usd = float(request.json['usd_amount'])
         lbp = float(request.json['lbp_amount'])
         u2l = int(request.json['usd_to_lbp'])
-        t = Transaction(usd, lbp, u2l, None, decoded_token)
         if(usd == 0 or lbp == 0):
             return abort(403)
+        if(decoded_token):
+            u = User.query.filter_by(id=decoded_token).first()
+            if(u2l==1 and u.usd_balance<usd or u2l==0 and u.lbp_balance<lbp):
+                return jsonify(message="Impossible")
+            if(u2l):
+                u.usd_balance -= usd
+                u.lbp_balance += lbp
+            else:
+                u.usd_balance += usd
+                u.lbp_balance -= lbp
+        t = Transaction(usd, lbp, u2l, None, decoded_token)
         db.session.add(t)
         db.session.commit()
         return jsonify(transaction_schema.dump(t))
@@ -91,8 +101,8 @@ def transaction():
         user_user_transactions.append(t)
     allu = User.query.all()
     mapping={}
-    for u in allu:
-        mapping[u.id] = u.user_name
+    for au in allu:
+        mapping[au.id] = au.user_name
     return jsonify(teller=transactions_schema.dump(user_teller_transactions), 
                    user=transactions_schema.dump(user_user_transactions),
                    mapping=mapping)
@@ -155,26 +165,6 @@ def authenticate():
         return abort(403)
     tok = create_token(existing_user.id)
     return jsonify(token=tok)
-
-@app.route('/usdbalance', methods=['GET'])
-def get_usd_balance():
-    auth_token = extract_auth_token(request)
-    try:
-        decoded_token = decode_token(auth_token)
-    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
-        return abort(403)
-    u = User.query.filter_by(id=decoded_token).first()
-    return u.usd_balance + u.usd_hold
-
-@app.route('/lbpbalance', methods=['GET'])
-def get_lbp_balance():
-    auth_token = extract_auth_token(request)
-    try:
-        decoded_token = decode_token(auth_token)
-    except jwt.InvalidTokenError or jwt.ExpiredSignatureError:
-        return abort(403)
-    u = User.query.filter_by(id=decoded_token).first()
-    return u.lbp_balance + u.lbp_hold
 
 @app.route('/balance', methods = ['GET'])
 def get_balance():
