@@ -329,3 +329,8 @@ ul{list-style-type:none;}
     font-size: 24px;
     color: #203f4a;
 }
+
+.statistics{
+    font-family: 'Open Sans';
+    text-align: center;
+}

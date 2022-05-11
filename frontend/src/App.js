@@ -49,6 +49,34 @@ const States = {
     else{return [[0,0]]} // edge case (no transaction)
  }
 
+ function getStandardDeviation(numbersArr) {
+  // CALCULATE AVERAGE
+  var total = 0;
+  for(var key in numbersArr) 
+     total += numbersArr[key][1];
+  var meanVal = total / numbersArr.length;
+  // CALCULATE AVERAGE
+
+  // CALCULATE STANDARD DEVIATION
+  var SDprep = 0;
+  for(var key in numbersArr) 
+     SDprep += Math.pow((parseFloat(numbersArr[key][1]) - meanVal),2);
+  var SDresult = Math.sqrt(SDprep/(numbersArr.length-1));
+  // CALCULATE STANDARD DEVIATION
+  return SDresult.toFixed(2);       
+}
+
+function getMinMax(numbers){
+  if(numbers.length ==0){return "No transactions yet"}
+  let max = numbers[0][1]
+  let min = numbers[0][1]
+  for(let i =1; i <numbers.length; i++){
+    if(numbers[i][1]>max){max=numbers[i][1];}
+    if(numbers[i][1]<min){min = numbers[i][1];}
+  }
+  return [min.toFixed(2), max.toFixed(2)]
+}
+
  // good formating to calculate insights 
  function concat2(arr1, arr2){
    for(var i =1; i<arr1.length; i++){
@@ -584,6 +612,14 @@ function App() {
                       })}</ul>
                   </div>
             </div>
+            <div className = "statistics">
+                <p> <b>Standard Deviation of USD Transactions </b>: {getStandardDeviation(allUsdTransactions)} </p>
+                <p> <b>Standard Deviation of LBP Transactions </b>: {getStandardDeviation(allLbpTransactions)}</p>
+                <p> <b> Minimum USD Rate: </b> {getMinMax(allUsdTransactions)[0]} &nbsp; &nbsp;
+                <b>Maximum USD Rate: </b> {getMinMax(allUsdTransactions)[1]}</p>
+                <p> <b>Minimum LBP Rate: </b> {getMinMax(allLbpTransactions)[0]} &nbsp; &nbsp; <b> Maximum LBP Rate: </b> {getMinMax(allLbpTransactions)[1]}</p>
+            </div>
+              
           </div>
           <h1>Graph</h1>
           <div className='graph'>
