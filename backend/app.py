@@ -321,9 +321,22 @@ def plot_user():
     return jsonify(usd_to_lbp_rates_uto=RATES_USD_TO_LBP_UTO, lbp_to_usd_rates_uto=RATES_LBP_TO_USD_UTO,
             usd_to_lbp_rates_ufrom=RATES_USD_TO_LBP_UFROM, lbp_to_usd_rates_ufrom=RATES_LBP_TO_USD_UFROM)
 
-
-    
-
-
-
+@app.route('/fetcheverything', methods=['GET'])
+def fetch():
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+    utc = datetime.datetime.utcnow()
+    utc = utc.replace(tzinfo=from_zone)
+    loc = utc.astimezone(to_zone)
+    START_DATE = loc - datetime.timedelta(days=3)
+    END_DATE = loc
+    LIST_USD_TO_LBP = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==1, Transaction.user_from_id == None).all()
+    LIST_LBP_TO_USD = Transaction.query.filter(Transaction.added_date.between(START_DATE, END_DATE), Transaction.usd_to_lbp==0, Transaction.user_from_id == None).all()
+    USD_TO_LBP = []
+    LBP_TO_USD = []
+    for transaction in LIST_USD_TO_LBP:
+        USD_TO_LBP.append((transaction.usd_amount, transaction.lbp_amount))
+    for transaction in LIST_LBP_TO_USD:
+        LBP_TO_USD.append((transaction.usd_amount, transaction.lbp_amount))
+    return jsonify(usd_to_lbp=USD_TO_LBP, lbp_to_usd=LBP_TO_USD)
 

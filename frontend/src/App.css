@@ -7,7 +7,7 @@ body{
     background: linear-gradient(270.62deg, #E2E2E2 -4.08%, rgba(236, 233, 230, 0.5) 108.27%);
 }
 
-.exr h1, #calculator h1, #timeline h1, #table h1, h5{
+.exr h1, #calculator h1, #timeline h1, #table h1 {
     font-family: 'Lora';
     font-style: normal;
     font-weight: 700;
@@ -192,17 +192,25 @@ body{
     display:flex;
     justify-content: space-around;
 }
-#timeline .glass-card{
+#timeline .glass-card, .insights .glass-card{
     width: 60%;
   
     padding-top: 40px;
     padding-bottom: 40px;
 }
 
-#tlgc{
+#tlgc, #ingc{
     height: 400px;
     overflow-y: scroll;
 }
+
+#ingc{
+    display:flex;
+    justify-content: space-around;
+}
+
+.lbp-in{width: 30%;}
+.usd-in{width: 30%;}
 
 .posts-container{
     display: flex;
@@ -248,8 +256,8 @@ body{
     color: #FFFFFF;
     cursor: pointer;
 }
-
-.all-transactions{
+.usd-in .glass-card, .lbp-in .glass-card{margin-bottom:50px;}
+.all-transactions, .user-transactions{
     display: flex;
     justify-content: space-around;
 }
@@ -306,4 +314,9 @@ body{
 
 #table p{
     font-size: 15px;
+}
+
+h5{
+    color: wheat;
+    
 }

@@ -27,11 +27,15 @@ const States = {
  
  var SERVER_URL = "http://127.0.0.1:5000";
 
+ /* Helper functions */
+
  function postDisabled(usd_to_lbp, usd_amount, usd_balance, lbp_amount, lbp_balance){
    return (usd_to_lbp==1)?(lbp_amount>lbp_balance):(usd_amount>usd_balance);
  }
 
+ // moving average for plot / fluctuation of rates in a format that a graph will accept
  function movingAverage(array){
+    if(array ==undefined){return [[0,0]]} // edge case
     if(array.length==1){
       return [[0].concat(array)];
     }
@@ -42,10 +46,24 @@ const States = {
       }
       return temp;
     }
-    else{return [[]]}
+    else{return [[0,0]]} // edge case (no transaction)
  }
- console.log("fix", movingAverage([1,2,3]))
 
+ // good formating to calculate insights 
+ function concat2(arr1, arr2){
+   for(var i =1; i<arr1.length; i++){
+     arr1[i].push(arr2[i][1]-arr2[i-1][1]);
+   }
+   arr1[0].push(arr2[0][1]);
+   return arr1;
+ }
+
+ 
+
+ function insightFormat(array){
+   if(array.length == 0){return array;}
+ }
+ 
 function App() {
   let [buyUsdRate, setBuyUsdRate] = useState(null);
   let [sellUsdRate, setSellUsdRate] = useState(null);
@@ -60,21 +78,45 @@ function App() {
   let [amount2, setAmount2] = useState(1);
   let [fromLBP, setFromLBP] = useState(true);
   let [fromLBP2, setFromLBP2] =useState(false);
+
+  // states for the table displaying all transactions
   let [userTransactions, setUserTransactions] = useState([]);
   let [tellerTransactions, setTellerTransactions] = useState([]);
 
+  // state of pop up dialog
   let [postOpen, setPostOpen]= useState(false);
-  //let [postDisabled, setPostDisabled] = useState(false);
+
+  // state of balance dialog
   let [balanceOpen, setBalanceOpen] = useState(false)
+
+  // list of all posts on the timeline
   let [tlPosts, setTlPosts] = useState([]);
+  
+  // list of all your timeline contributions
   let [yourPosts, setYourPosts] = useState([]);
+
+  // helpful for charting; basically a moving average of the transactions
   let [allUsdTransactions, setAllUsdTransactions]= useState([]);
   let [allLbpTransactions, setAllLbpTransactions]= useState([]);
 
+  // same thing but with your transactions
+  let [allYourUsdTransactions, setAllYourUsdTransactions]= useState([]);
+  let [allYourLbpTransactions, setAllYourLbpTransactions]= useState([]);
+
+  // your USD and LBP balances. They change as you engage in transactions with other users.
   let [usdBalance, setUsdBalance] = useState(0)
   let [lbpBalance, setLbpBalance] = useState(0)
+
+  // sets the timeline you're trying to see
   let [who, setWho] = useState("All")
 
+  let [insightUSD, setInsightUSD] = useState([])
+  let [insightLBP, setInsightLBP] = useState([])
+  // better format
+  let [fInsightUSD, setfInsightUSD] = useState([])
+  let [fInsightLBP, setfInsightLBP] = useState([])
+
+  // this block of code is for the calculator section (dynamic response of field change)
   let lAmount1, uAmount1;
   let lAmount2, uAmount2;
   
@@ -94,6 +136,9 @@ function App() {
     lAmount2 = amount2*sellUsdRate;
   }
 
+  /* All Routes */
+  
+  // Route to display rates
   function fetchRates() { // retrieve exchange rates and update the UI
     fetch(`${SERVER_URL}/exchangeRate`)
     .then(response => response.json())
@@ -104,6 +149,7 @@ function App() {
   }
   useEffect(fetchRates, []);
 
+  // Route to fetch the user's balance and update the state
   function fetchBalance(){
     fetch(`${SERVER_URL}/balance`, {
       headers:{
@@ -128,6 +174,7 @@ function App() {
   //   })
   // },[userToken, lbpBalance, usdBalance]);
 
+  // Route to plot all transactions buy retrieving the arrays
   function plotAll(){
     fetch(`${SERVER_URL}/plotall`)
     .then(response=>response.json())
@@ -140,7 +187,40 @@ function App() {
   }
   useEffect(plotAll, []);
 
+  // Route to plot all user effect on exchange rate
+  function plotUser(){
+    fetch(`${SERVER_URL}/plotuser`,{
+      headers: {
+        'Authorization': `bearer ${userToken}`
+      }
+    })
+    .then(response=>response.json())
+    .then(transactions=>{
+      setAllYourUsdTransactions(movingAverage(transactions['usd_to_lbp_rates_uto'])); 
+      setAllYourLbpTransactions(movingAverage(transactions['lbp_to_usd_rates_uto'])); 
+  })
+  }
+  useEffect(plotUser, [userToken]);
 
+  // route to fetch user all transactions with the corresponding exchange rate caused
+  function insights(){
+    fetch(`${SERVER_URL}/fetcheverything`)
+    .then(response=>response.json())
+    .then(transactions=>{
+      setInsightUSD(transactions['usd_to_lbp']);
+      setInsightLBP(transactions['lbp_to_usd']);
+      console.log(insightUSD, "insights");
+    })
+    .then(
+      ()=>{
+        setfInsightUSD(concat2(insightUSD, allUsdTransactions)); console.log(fInsightUSD, allUsdTransactions);
+        setfInsightLBP(concat2(insightLBP, allLbpTransactions)); console.log(fInsightLBP, allLbpTransactions);
+      }
+    )
+  }
+  useEffect(insights, [allUsdTransactions]);
+
+  // route to add a transaction
   function addItem() {
     if(usdInput == ""||lbpInput==""){alert('Empty field!'); return;}
     if(usdInput==0||lbpInput==0){alert('Null transaction not allowed.'); return;}
@@ -162,7 +242,7 @@ function App() {
     .then((respval) => {
       if(respval.hasOwnProperty('message')) {alert('You do not have the amount of money needed for this exchange.'); }
       else{
-        fetchRates(); plotAll();
+        fetchRates(); plotAll(); plotUser(); insights();
         setUsdInput(""); 
         setLbpInput(""); 
         if(userToken){
@@ -281,6 +361,7 @@ function App() {
     }
   }, [fetchUserTransactions, userToken]);
 
+  // route to fetch all the posts on the timeline (inter-user transactions)
   function loadTimeline(){
     fetch(`${SERVER_URL}/timeline`,{
       headers: {
@@ -292,6 +373,7 @@ function App() {
   };
   useEffect(loadTimeline, [userToken]);
 
+  // route to retrieve the timeline consisting of your own posts
   function loadYourTimeline(){
     fetch(`${SERVER_URL}/mytimeline`,{
       headers: {
@@ -303,6 +385,7 @@ function App() {
   };
   useEffect(loadYourTimeline, [userToken, postOpen]);
 
+  // route to post a request on the timeline
   function postTimeline(usd,lbp, u2l){
     if(usd == ""||lbp==""){alert('Empty field!'); return;}
     if(usd==0||lbp==0){alert('Null transactions are not allowed.'); return;}
@@ -327,6 +410,7 @@ function App() {
     //.then((response)=>login(username, password)); .then make it show on the TL??????? maybe; get function till we get to that. baby steps.
   }
 
+  // route to perform a transaction with another user
   function exchange(id){
     fetch(`${SERVER_URL}/timelineconfirm`,{
       method: 'POST',
@@ -340,6 +424,8 @@ function App() {
     })
     .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline(); fetchUserTransactions();})
   };
+  
+  // route to delete a posted transaction
 
   function deletePost(id){
     fetch(`${SERVER_URL}/deleterequest`,{
@@ -387,12 +473,12 @@ function App() {
       <Dialog open = {balanceOpen} onClose = {()=>setBalanceOpen(false)} id = "balance-dialog" style={{'min-width':'1000px'}}>
         <div className ='balance'>
           <h1> Your Balance: </h1>
-          <div class ="balances">
-            <div class = "glass-card">
+          <div className="balances">
+            <div className= "glass-card">
               <h2>USD Balance:</h2>
               <p>${usdBalance}</p>
             </div>
-            <div  class= "glass-card">
+            <div  className= "glass-card">
               <h2>LBP Balance</h2>
               <p> {lbpBalance} LBP</p>
             </div>
@@ -417,7 +503,7 @@ function App() {
         >
         <Alert severity="error">Failed</Alert>
       </Snackbar>
-      {!userToken && <Header/>}
+      {!userToken && <Header/> }
       <section id='rates'>
         <div className = "exr">
           <h1>Today's Exchange Rate</h1>
@@ -459,61 +545,154 @@ function App() {
             </div>
           </div>
           <h1>Insights</h1>
-          <div className ='insights'></div>
+          <p className = 'p-calc'> Effect of every transaction on the rate:</p>
+          <div className ='insights'>
+            <div glass-card id = 'ingc'>
+              <div className = 'usd-in'>
+                <ul>{[...Array(fInsightUSD.length)].map((e, i) => {
+                        return <li key={i}>
+                          <div className = 'gc-flex'>
+                            <div className = 'glass-card'>
+                              <h3> {fInsightUSD[i][0]} USD - {(fInsightUSD[i][1])} LBP:</h3>
+                              <p> Buy USD </p>
+                              <div id = 'button-text'>
+                                <b>Effect on Buy USD Rate: </b> <br/>{(fInsightUSD[i][2]>0)&&'+'}{fInsightUSD[i][2]} <br/> 
+                              
+                              </div>
+                            </div>
+                            
+                          </div>
+                        </li>
+                      })}</ul>
+                </div>
+                <div className = 'lbp-in'>
+                <ul>{ // instead of extending to a map as done below and several times, one could use jinja2. we are essentially using a for loop to iterate over posts.
+                [...Array(fInsightLBP.length)].map((e, i) => {
+                        return <li key={i}>
+                          <div className = 'gc-flex'>
+                            <div className = 'glass-card'>
+                              <h3> {fInsightLBP[i][0]} USD - {(fInsightLBP[i][1])} LBP:</h3>
+                              <p> Sell USD  </p>
+                              <div id = 'button-text'>
+                                <b>Effect on Sell USD Rate: </b>  <br/>{(fInsightLBP[i][2]>0)&&'+'}{fInsightLBP[i][2]} <br/> 
+                              
+                              </div>
+                            </div>
+                            
+                          </div>
+                        </li>
+                      })}</ul>
+                  </div>
+            </div>
+          </div>
           <h1>Graph</h1>
           <div className='graph'>
             <div className = 'glass-card'>
-            <h2>All Transactions</h2>
+              <h2>All Transactions</h2>
 
-            <div className="all-transactions">
-                <Chart
-                  width={'625px'}
-                  height={'360px'}
-                  chartType="LineChart"
-                  loader={<div>Loading Chart</div>}
-                  color= "transparent"
-                  data={[
-                    ['x', 'USD to LBP']
-                  ].concat(allUsdTransactions)}
-                  options={ {
-                    hAxis: {
-                      title: 'Time',
-                    },
-                    vAxis: {
-                      title: 'Exchange Rate',
-                      minValue: 0
-                    },
-                    series: {
-                      1: { curveType: 'function' },
-                    },
-                  }}
-                  rootProps={{ 'data-testid': '2' }}
-                />
-                <Chart
-                  width={'625px'}
-                  height={'360px'}
-                  chartType="LineChart"
-                  loader={<div>Loading Chart</div>}
-                  color= "transparent"
-                  data={[
-                    ['x', 'LBP to USD']
-                  ].concat(allLbpTransactions)}
-                  options={ {
-                    hAxis: {
-                      title: 'Time',
-                    },
-                    vAxis: {
-                      title: 'Exchange Rate',
-                      minValue: 0
-                    },
-                    series: {
-                      1: { curveType: 'function' },
-                    },
-                  }}
-                  rootProps={{ 'data-testid': '2' }}
-                />
-              </div>
-            </div>
+              <div className="all-transactions">
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'USD to LBP']
+                    ].concat(allUsdTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'LBP to USD']
+                    ].concat(allLbpTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                </div>
+
+
+              {userToken && 
+              <>
+              <h2>User Transactions</h2>
+              <p>See how your transactions affected the exchange rate. </p>
+              <div className="user-transactions">
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'USD to LBP']
+                    ].concat(allYourUsdTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                  <Chart
+                    width={'625px'}
+                    height={'360px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart</div>}
+                    color= "transparent"
+                    data={[
+                      ['x', 'LBP to USD']
+                    ].concat(allYourLbpTransactions)}
+                    options={ {
+                      hAxis: {
+                        title: 'Time',
+                      },
+                      vAxis: {
+                        title: 'Exchange Rate',
+                        minValue: 0
+                      },
+                      series: {
+                        1: { curveType: 'function' },
+                      },
+                    }}
+                    rootProps={{ 'data-testid': '2' }}
+                  />
+                </div> </>}
+            </div> 
           </div>
         </div>
       </section>
@@ -562,7 +741,7 @@ function App() {
         
             {!userToken &&
             <div style={{height:120}} className='glass-card'>
-            <span class='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>
+            <span className='p-tl' onClick={() => setAuthState(States.USER_LOG_IN)}> Please <b>login </b> to see the posted requests.</span>
             </div>}
 
             {userToken && 
@@ -596,7 +775,7 @@ function App() {
                         </div>
                         <div className = "button-text">
                           <button type = "button" disabled = {postDisabled(tlPosts[i]['usd_to_lbp'], tlPosts[i]['usd_amount'], usdBalance, tlPosts[i]['lbp_amount'],lbpBalance)} onClick = {()=>{exchange(tlPosts[i]['id'])}}>Exchange</button>
-                          <div class="hide">Insufficient funds!</div>
+                          <div className="hide">Insufficient funds!</div>
                         </div>
                         
                       </div>
@@ -669,7 +848,7 @@ function App() {
           <div className='glass-card' style={{marginRight:15, width: 675, float:'right', backgroundColor: "#3A6170"}}>
           {userToken && (
                   <div width="450px" className="wrapper ">
-                    <Typography style={{marginTop:4, marginBottom:4}} variant="h5">Your Transactions with Users</Typography>
+                    <Typography style={{marginTop:4, marginBottom:4}} variant="h5" >Your Transactions with Users</Typography>
                     <DataGrid style={{color: "cornsilk"}}
                     HorizontalAlign = 'Center'
                     columns = {[
