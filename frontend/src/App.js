@@ -204,7 +204,7 @@ function App() {
 
   // route to fetch user all transactions with the corresponding exchange rate caused
   function insights(){
-    fetch(`${SERVER_URL}/fetcheverything`)
+    fetch(`${SERVER_URL}/transaction`)
     .then(response=>response.json())
     .then(transactions=>{
       setInsightUSD(transactions['usd_to_lbp']);
@@ -302,7 +302,7 @@ function App() {
         return;
       }
     }
-    if(username.charAt(0)>='0' && username.charAt(0)<='9'){alert("Username cannot start with a diigit."); return;}
+    if(username.charAt(0)>='0' && username.charAt(0)<='9'){alert("Username cannot start with a digit."); return;}
     var found=0;
     for(let i=0; i<password.length; i++){
       if(!(password.charAt(i)>='0' && password.charAt(i)<='9') && !(password.charAt(i)>='a' && password.charAt(i)<='z') && !(password.charAt(i)>='A' && password.charAt(i)<='Z')){
@@ -422,7 +422,7 @@ function App() {
           id: id
       })
     })
-    .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline(); fetchUserTransactions();})
+    .then(()=>{fetchBalance(); loadTimeline(); loadYourTimeline(); })
   };
   
   // route to delete a posted transaction
@@ -545,7 +545,7 @@ function App() {
             </div>
           </div>
           <h1>Insights</h1>
-          <p className = 'p-calc'> Effect of every transaction on the rate:</p>
+          <p className = 'p-calc'> <span className = "insights-txt"> Effect of every transaction on the rate </span> </p>
           <div className ='insights'>
             <div glass-card id = 'ingc'>
               <div className = 'usd-in'>
@@ -556,7 +556,7 @@ function App() {
                               <h3> {fInsightUSD[i][0]} USD - {(fInsightUSD[i][1])} LBP:</h3>
                               <p> Buy USD </p>
                               <div id = 'button-text'>
-                                <b>Effect on Buy USD Rate: </b> <br/>{(fInsightUSD[i][2]>0)&&'+'}{fInsightUSD[i][2]} <br/> 
+                                <b>Effect on Buy USD Rate: </b> <br/>{(fInsightUSD[i][2]>0)&&'+'}{fInsightUSD[i][2].toFixed(2)} <br/> 
                               
                               </div>
                             </div>
@@ -574,7 +574,7 @@ function App() {
                               <h3> {fInsightLBP[i][0]} USD - {(fInsightLBP[i][1])} LBP:</h3>
                               <p> Sell USD  </p>
                               <div id = 'button-text'>
-                                <b>Effect on Sell USD Rate: </b>  <br/>{(fInsightLBP[i][2]>0)&&'+'}{fInsightLBP[i][2]} <br/> 
+                                <b>Effect on Sell USD Rate: </b>  <br/>{(fInsightLBP[i][2]>0)&&'+'}{fInsightLBP[i][2].toFixed(2)} <br/> 
                               
                               </div>
                             </div>

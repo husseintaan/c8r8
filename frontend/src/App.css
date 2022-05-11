@@ -199,6 +199,8 @@ body{
     padding-bottom: 40px;
 }
 
+.insights .glass-card{width:120%;}
+
 #tlgc, #ingc{
     height: 400px;
     overflow-y: scroll;
@@ -317,6 +319,13 @@ body{
 }
 
 h5{
-    color: wheat;
+    color: cornsilk;
     
+}
+
+ul{list-style-type:none;}
+
+.insights-txt {
+    font-size: 24px;
+    color: #203f4a;
 }
