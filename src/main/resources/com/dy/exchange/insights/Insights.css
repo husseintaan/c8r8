@@ -1,0 +1,13 @@
+.root {
+    //-fx-background-color: whitesmoke;
+    -fx-background-image: url(img.png);
+}
+.header {
+    -fx-font-size: 20;
+}
+.value-label {
+    -fx-font-size: 15;
+}
+.value {
+    -fx-font-size: 11;
+}

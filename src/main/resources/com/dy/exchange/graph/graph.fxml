@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.CategoryAxis?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.dy.exchange.graph.Graph"
+            prefHeight="400.0" prefWidth="600.0">
+    <LineChart fx:id="lineGraph" prefHeight="400.0" prefWidth="423.0">
+        <xAxis>
+            <CategoryAxis fx:id="xAxis" side="BOTTOM" />
+        </xAxis>
+        <yAxis>
+            <NumberAxis fx:id="yAxis" side="LEFT" />
+        </yAxis>
+
+    </LineChart>
+</AnchorPane>

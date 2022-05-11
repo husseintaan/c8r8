@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.dy.exchange.listings.Posts"
+            hgap="10"
+            vgap="5"
+            prefHeight="400.0"
+            prefWidth="500.0"
+            stylesheets="@posts.css">
+
+    <Label styleClass="header"
+           text="Posts"
+           GridPane.columnSpan="2" />
+
+    <Label styleClass="value-label"
+           text="Input the amount you would like to sell"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="1"/>
+    <TextField fx:id="sellingAmount"
+               GridPane.columnIndex="0"
+               GridPane.rowIndex="2"/>
+
+    <Label styleClass="value-label"
+           text="Input the amount you would like to sell it for"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="3"/>
+    <TextField fx:id="buyingAmount"
+               GridPane.columnIndex="0"
+               GridPane.rowIndex="4"/>
+
+    <Label styleClass="value-label"
+           text="Add your contact-info"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="5"/>
+    <TextField fx:id="usercontact"
+               GridPane.columnIndex="0"
+               GridPane.rowIndex="6"/>
+
+    <RadioButton text="USD TO LBP"
+                 GridPane.columnIndex="0"
+                 GridPane.rowIndex="7">
+        <toggleGroup>
+            <ToggleGroup fx:id="Type"/>
+        </toggleGroup>
+    </RadioButton>
+
+    <RadioButton text="LBP To USD"
+                 toggleGroup="$Type"
+                 GridPane.columnIndex="0"
+                 GridPane.rowIndex="8"/>
+
+    <Button text="post"
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="9"
+            onAction="#addPost"/>
+
+    <ScrollPane
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="10">
+        <VBox prefWidth="400">
+        <children>
+            <Label styleClass="value"
+                   fx:id="lists"
+                   text=""
+                   />
+        </children>
+        </VBox>
+    </ScrollPane>
+
+</GridPane>

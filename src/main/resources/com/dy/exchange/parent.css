@@ -1,0 +1,18 @@
+.nav-container {
+    -fx-border-color: white;
+    -fx-border-width: 1px;
+    -fx-pref-width: 150px;
+    -fx-background-color: linear-gradient(#102A34 , #6EA4B9);
+}
+.nav-button {
+    -fx-max-width: 150px;
+    -fx-background-color: #E5E5E5;
+    -fx-background-insets: 0,1,2,3;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 12 30 12 30;
+    -fx-text-fill: #6EA4B9;
+    -fx-font-size: 12px;
+}
+#borderPane {
+    -fx-background-image: url("https://www.google.com/url?sa=i&url=https%3A%2F%2Funsplash.com%2Fbackgrounds%2Fapps&psig=AOvVaw0G8UR_TfBcOREON-HdE1Dx&ust=1652317000234000&source=images&cd=vfe&ved=0CAwQjRxqFwoTCPjqj9ee1vcCFQAAAAAdAAAAABAE");
+}

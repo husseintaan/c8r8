@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.dy.exchange.insights.Insights"
+            hgap="10"
+            vgap="10"
+            alignment="center"
+            prefHeight="475.0"
+            prefWidth="600.0"
+            stylesheets="@Insights.css">
+    <Label styleClass="header"
+           text="INSIGHTS"
+           textAlignment="CENTER"
+           GridPane.columnSpan="2"
+           GridPane.rowIndex="0" />
+    <Label styleClass="value-label"
+           text="Max LBP to USD"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="1"
+           textAlignment="CENTER"/>
+    <Label styleClass="value"
+           fx:id="maxlbpl"
+           text="MAX"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="2"
+           GridPane.rowSpan="7"/>
+
+    <Label styleClass="value-label"
+           text="Max USD to LBP"
+           GridPane.columnIndex="2"
+           GridPane.rowIndex="1"
+           textAlignment="CENTER"/>
+    <Label styleClass="value"
+           fx:id="maxusd"
+           text="MAX"
+           GridPane.columnIndex="2"
+           GridPane.rowIndex="2"
+           GridPane.rowSpan="7"/>
+
+
+    <Label styleClass="value-label"
+           text="median lbp"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="11"
+           textAlignment="CENTER"/>
+    <Label styleClass="value"
+           fx:id="medianlbp"
+           text="N/A"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="12"/>
+
+    <Label styleClass="value-label"
+           text="median usd"
+           GridPane.columnIndex="2"
+           GridPane.rowIndex="11"
+           textAlignment="CENTER"/>
+    <Label styleClass="value"
+           fx:id="medianusd"
+           text="median usd"
+           GridPane.columnIndex="2"
+           GridPane.rowIndex="12"/>
+    <Label styleClass="value-label"
+           text="min usd"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="13"
+           textAlignment="CENTER"/>
+    <Label styleClass="value"
+           fx:id="minusd"
+           text="min usd"
+           GridPane.columnIndex="0"
+           GridPane.rowIndex="14"/>
+    <Label styleClass="value-label"
+           text="stdev lbp"
+           GridPane.columnIndex="2"
+           GridPane.rowIndex="13"
+           textAlignment="CENTER"/>
+    <Label styleClass="value"
+           fx:id="stddevlbp"
+           text="stdev lbp"
+           GridPane.columnIndex="2"
+           GridPane.rowIndex="14"/>
+
+
+
+</GridPane>
