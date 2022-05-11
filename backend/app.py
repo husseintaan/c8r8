@@ -33,6 +33,7 @@ transactions_schema = TransactionSchema(many=True)
 pending_schema = PendingSchema()
 pendings_schema = PendingSchema(many=True)
 
+#Creates a token for user which expires in 4 days
 def create_token(user_id):
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
@@ -43,6 +44,7 @@ def create_token(user_id):
                 'iat': loc, 'sub': user_id }
     return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
+#Extract user token from request
 def extract_auth_token(authenticated_request):
     auth_header = authenticated_request.headers.get('Authorization')
     if auth_header:
@@ -50,10 +52,13 @@ def extract_auth_token(authenticated_request):
     else:
         return None
 
+#Extract user ID from user token
 def decode_token(token):
     payload = jwt.decode(token, SECRET_KEY, 'HS256')
     return payload['sub']
 
+#GET user-user and user-teller transactions
+#POST a transaction (user or anonymous) with a teller
 @app.route('/transaction', methods=['POST', 'GET'])
 def transaction():
     auth_token = extract_auth_token(request)
@@ -107,6 +112,7 @@ def transaction():
                    user=transactions_schema.dump(user_user_transactions),
                    mapping=mapping)
 
+#GET all transactions in the past 3 days and return the average rates
 @app.route('/exchangeRate', methods=['GET'])
 def get_rates():
     from_zone = tz.tzutc()
@@ -132,6 +138,7 @@ def get_rates():
         AVERAGE_LBP_TO_USD = round(sum(RATES_LBP_TO_USD)/len(RATES_LBP_TO_USD), 2)
     return jsonify(usd_to_lbp=AVERAGE_USD_TO_LBP, lbp_to_usd=AVERAGE_LBP_TO_USD)
 
+#Create a new user
 @app.route('/user', methods=['POST'])
 def add_user():
     uname = request.json['user_name']
@@ -150,6 +157,7 @@ def add_user():
     db.session.commit()
     return jsonify(user_schema.dump(u))
 
+#Authenticate user before providing token
 @app.route('/authentication', methods=['POST'])
 def authenticate():
     uname = request.json['user_name']
@@ -166,6 +174,7 @@ def authenticate():
     tok = create_token(existing_user.id)
     return jsonify(token=tok)
 
+#GET user's current balance
 @app.route('/balance', methods = ['GET'])
 def get_balance():
     auth_token = extract_auth_token(request)
@@ -176,6 +185,8 @@ def get_balance():
     u = User.query.filter_by(id=decoded_token).first()
     return jsonify(usd_balance=u.usd_balance + u.usd_hold, lbp_balance=u.lbp_balance + u.lbp_hold)
 
+#GET other user's exchange requests
+#POST an exchange request if enough balance
 @app.route('/timeline', methods=['POST', 'GET'])
 def interuser():
     auth_token = extract_auth_token(request)
@@ -209,6 +220,7 @@ def interuser():
             other_user_pendings.append(up)
     return jsonify(pendings_schema.dump(other_user_pendings))
 
+#Accept a request made by another user
 @app.route('/timelineconfirm', methods=['POST'])
 def confirm_interuser():
     auth_token = extract_auth_token(request)
@@ -239,6 +251,7 @@ def confirm_interuser():
     db.session.commit()
     return jsonify(transaction_schema.dump(t))
 
+#GET all users' own requests
 @app.route('/mytimeline', methods=['GET'])
 def my_timeline():
     auth_token = extract_auth_token(request)
@@ -249,6 +262,7 @@ def my_timeline():
     user_pendings = Pending.query.filter_by(user_to_id=decoded_token).all()
     return jsonify(pendings_schema.dump(user_pendings))
 
+#Delete a user's request that is not yet accepted
 @app.route('/deleterequest', methods=['POST'])
 def delete_request():
     auth_token = extract_auth_token(request)
@@ -269,6 +283,7 @@ def delete_request():
     db.session.commit()
     return jsonify(pending_schema.dump(p))
 
+#GET all transactions withing the past 3 days and return an array of the exchange rates for plotting
 @app.route('/plotall', methods=['GET'])
 def plot_all():
     from_zone = tz.tzutc()
@@ -288,6 +303,7 @@ def plot_all():
         RATES_LBP_TO_USD.append(transaction.lbp_amount/transaction.usd_amount)
     return jsonify(usd_to_lbp_rates=RATES_USD_TO_LBP, lbp_to_usd_rates=RATES_LBP_TO_USD)
 
+#GET all transactions to/from the user in the past 3 days and return an array of the exchange rates for plotting
 @app.route('/plotuser', methods=['GET'])
 def plot_user():
     auth_token = extract_auth_token(request)
@@ -321,6 +337,7 @@ def plot_user():
     return jsonify(usd_to_lbp_rates_uto=RATES_USD_TO_LBP_UTO, lbp_to_usd_rates_uto=RATES_LBP_TO_USD_UTO,
             usd_to_lbp_rates_ufrom=RATES_USD_TO_LBP_UFROM, lbp_to_usd_rates_ufrom=RATES_LBP_TO_USD_UFROM)
 
+#GET all transactions withing the past 3 days and return an array of the exchange rates for plotting (DESKTOP)
 @app.route('/fetcheverything', methods=['GET'])
 def fetch():
     from_zone = tz.tzutc()
