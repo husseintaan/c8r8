@@ -31,15 +31,4 @@ public class Contact {
         this.usdToLbp = usdToLbp;
     }
 
-    @Override
-    public String toString() {
-        return "ListingsData{" +
-                "listingId=" + postid +
-                ", postingUserId=" + postingUserId +
-                ", usercontact='" + usercontact + '\'' +
-                ", sellingAmount=" + sellingAmount +
-                ", buyingAmount=" + buyingAmount +
-                ", usdToLbp=" + usdToLbp +
-                '}';
-    }
 }

@@ -52,7 +52,7 @@
            textAlignment="CENTER"/>
     <Label styleClass="value"
            fx:id="medianlbp"
-           text="N/A"
+           text="median lbp"
            GridPane.columnIndex="0"
            GridPane.rowIndex="12"/>
 
