@@ -19,5 +19,6 @@ module com.dy.exchange {
     opens com.dy.exchange.transactions to javafx.fxml;
     opens com.dy.exchange.graph to javafx.fxml;
     opens com.dy.exchange.insights to javafx.fxml;
-    opens com.dy.exchange.listings to javafx.fxml;
+    opens com.dy.exchange.posts to javafx.fxml;
+    opens com.dy.exchange.balance to javafx.fxml;
 }

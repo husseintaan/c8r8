@@ -29,13 +29,13 @@ public interface Exchange {
     @GET("/graph")
     Call<GraphDataPoints> getGraphDataPoints();
 
-    @GET("/statistics")
+    @GET("/stat")
     Call<InsightsData> getInsightsData();
 
-    @GET("/listings")
+    @GET("/list")
     Call<List<Contact>> getListings();
 
-    @POST("/listing")
+    @POST("/lists")
     Call<Object> addPost(@Body Contact contact, @Header("Authorization") String authorization);
     @GET("/balance")
     Call<Object> getbalance(@Header("Authorization") String authorization);

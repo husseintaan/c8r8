@@ -1,4 +1,4 @@
-package com.dy.exchange.listings;
+package com.dy.exchange.balance;
 
 import com.dy.exchange.Authentication;
 import com.dy.exchange.api.ExchangeService;

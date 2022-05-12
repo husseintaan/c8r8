@@ -111,7 +111,7 @@ public class Parent implements Initializable, OnPageCompleteListener{
                 case INSIGHTS ->
                         "/com/dy/exchange/insights/insights.fxml";
                 case LISTINGS ->
-                        "/com/dy/exchange/listings/posts.fxml";
+                        "/com/dy/exchange/posts/posts.fxml";
                 default -> null;
             };
         }

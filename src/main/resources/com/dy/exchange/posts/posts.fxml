@@ -8,7 +8,7 @@
 
 <GridPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.dy.exchange.listings.Posts"
+            fx:controller="com.dy.exchange.balance.Posts"
             hgap="10"
             vgap="5"
             prefHeight="400.0"
