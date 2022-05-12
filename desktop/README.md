@@ -32,6 +32,7 @@
 ### Package exchange.insights 
 ### Package exchange.rates 
 ### Package exchange.transactions 
+### Package exchange.balance
 ### Package exchange.API.models 
 ### Package exchange.list 
 
