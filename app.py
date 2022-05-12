@@ -96,9 +96,9 @@ def transaction():
     mapping={}
     for u in allu:
         mapping[u.id] = u.user_name
-    return jsonify(teller=transactions_schema.dump(user_teller_transactions), 
-                   user=transactions_schema.dump(user_user_transactions),
-                   mapping=mapping) 
+    return jsonify(transactions_schema.dump(user_teller_transactions), 
+                   transactions_schema.dump(user_user_transactions),
+                   mapping) 
 
 
 
@@ -377,7 +377,7 @@ def fetch():
         LBP_TO_USD.append((transaction.usd_amount, transaction.lbp_amount))
     return jsonify(usd_to_lbp=USD_TO_LBP, lbp_to_usd=LBP_TO_USD) 
 
-@app.route('/listing', methods=['POST'])
+@app.route('/lists', methods=['POST'])
 def add_listing():
     auth_token = extract_auth_token(request)
     usercontact = request.json['usercontact']
@@ -399,7 +399,7 @@ def add_listing():
     
     return jsonify(listing_schema.dump(listing))
 
-@app.route('/statistics', methods = ['GET'])
+@app.route('/stat', methods = ['GET'])
 def statistic():
     d = date.today()
     year = d.year
@@ -432,7 +432,7 @@ def statistic():
         "lbp_to_usd_Max": max(liras),
         "lbp_to_usd_Min": min(liras)
     })
-@app.route('/listings', methods=['GET'])
+@app.route('/list', methods=['GET'])
 def get_listings():
     
     try:
